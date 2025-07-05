@@ -1,0 +1,15 @@
+body { margin: 0; font-family: 'Noto Sans KR', sans-serif; background: #f7f6f2; }
+.container { max-width: 900px; margin: 0 auto; padding: 24px; }
+.header { text-align: center; margin-bottom: 24px; }
+.main-content { display: flex; flex-direction: column; gap: 16px; }
+.card { background: #fff; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); padding: 20px; }
+.card__header { margin-bottom: 12px; }
+.btn { border: none; border-radius: 6px; padding: 8px 16px; font-size: 1rem; cursor: pointer; }
+.btn--primary { background: #1FB8CD; color: #fff; }
+.btn--secondary { background: #B4413C; color: #fff; }
+.btn--outline { background: #fff; color: #1FB8CD; border: 1px solid #1FB8CD; }
+.modal { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+.modal-content { background: #fff; border-radius: 10px; padding: 24px; min-width: 320px; max-width: 90vw; }
+.modal-header { display: flex; justify-content: space-between; align-items: center; }
+.modal-close { background: none; border: none; font-size: 2rem; cursor: pointer; color: #888; }
+.hidden { display: none !important; }
