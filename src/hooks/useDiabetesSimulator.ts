@@ -164,6 +164,7 @@ export function useDiabetesSimulator() {
     openInsulinModal,
     closeInsulinModal,
     logEvent,
+    foodData, // 추가
     // ...이벤트 함수들 추가 예정
   };
 }
