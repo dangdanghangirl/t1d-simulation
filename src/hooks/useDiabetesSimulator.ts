@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import type { GameState } from '../types/GameState';
 
 // 타입 명세
 export interface Food {
@@ -38,16 +39,6 @@ export interface Effect {
   conversion?: number;
   effectiveness?: number[];
   unitsPerMinute?: number;
-}
-
-export interface GameState {
-  currentTime: number;
-  currentGlucose: number;
-  activeInsulin: number;
-  basalInsulin: number;
-  activeEffects: Effect[];
-  gameLog: string[];
-  selectedFood: Food | null;
 }
 
 // 데이터 (실제 구현에서는 useMemo 등으로 분리 가능)
@@ -105,6 +96,7 @@ export const macronutrientData = {
 export function useDiabetesSimulator() {
   // 초기 상태
   const [gameState, setGameState] = useState<GameState>({
+    selectedAge: null,
     currentTime: 8 * 60,
     currentGlucose: 120,
     activeInsulin: 0,
@@ -112,13 +104,66 @@ export function useDiabetesSimulator() {
     activeEffects: [],
     gameLog: [],
     selectedFood: null,
+    showMealModal: false,
+    showInsulinModal: false,
+    glucoseHistory: [120],
+    timeLabels: ['08:00']
   });
 
-  // TODO: 주요 이벤트 함수, 상태 업데이트, 시뮬레이션 로직 이식
+  // 시뮬레이션 주요 이벤트 함수 예시 (식사, 인슐린, 운동, 시간 진행)
+  function logEvent(message: string) {
+    setGameState(prev => ({
+      ...prev,
+      gameLog: [...prev.gameLog, `[${formatTime(prev.currentTime)}] ${message}`]
+    }));
+  }
+
+  function formatTime(minutes: number) {
+    const hours = Math.floor(minutes / 60) % 24;
+    const mins = minutes % 60;
+    return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
+  }
+
+  function advanceTime() {
+    setGameState(prev => {
+      const timeStep = 30;
+      let newTime = prev.currentTime + timeStep;
+      if (newTime >= 24 * 60) newTime = 0;
+      // TODO: 혈당 변화, 효과 적용 등 추가
+      return {
+        ...prev,
+        currentTime: newTime,
+        timeLabels: [...prev.timeLabels, formatTime(newTime)].slice(-20),
+        glucoseHistory: [...prev.glucoseHistory, prev.currentGlucose].slice(-20)
+      };
+    });
+    logEvent('시간이 경과했습니다.');
+  }
+
+  function openMealModal() {
+    setGameState(prev => ({ ...prev, showMealModal: true }));
+  }
+  function closeMealModal() {
+    setGameState(prev => ({ ...prev, showMealModal: false, selectedFood: null }));
+  }
+  function openInsulinModal() {
+    setGameState(prev => ({ ...prev, showInsulinModal: true }));
+  }
+  function closeInsulinModal() {
+    setGameState(prev => ({ ...prev, showInsulinModal: false }));
+  }
+
+  // ...기타 이벤트 함수 및 시뮬레이션 로직 추가 예정...
 
   return {
     gameState,
     setGameState,
+    advanceTime,
+    openMealModal,
+    closeMealModal,
+    openInsulinModal,
+    closeInsulinModal,
+    logEvent,
     // ...이벤트 함수들 추가 예정
   };
 }

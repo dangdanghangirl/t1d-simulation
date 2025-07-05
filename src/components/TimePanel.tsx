@@ -1,16 +1,18 @@
 import React from 'react';
+import type { GameState } from '../types/GameState';
 
 interface TimePanelProps {
-  // TODO: 필요한 props 정의 (시간, 일시정지, 배속 등)
+  state: GameState;
+  advanceTime: () => void;
 }
 
-const TimePanel: React.FC<TimePanelProps> = (props) => {
+const TimePanel: React.FC<TimePanelProps> = ({ state, advanceTime }) => {
   return (
     <div className="time-panel">
       <div className="card">
         <div className="card__body">
-          {/* 시간 표시, 일시정지/배속 버튼, 응급 알림 등 구현 예정 */}
-          <div>시간 및 상태 패널</div>
+          <div>현재 시간: {`${Math.floor(state.currentTime / 60).toString().padStart(2, '0')}:${(state.currentTime % 60).toString().padStart(2, '0')}`}</div>
+          <button className="btn btn--secondary" onClick={advanceTime}>30분 진행</button>
         </div>
       </div>
     </div>

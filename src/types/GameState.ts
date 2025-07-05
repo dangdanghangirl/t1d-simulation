@@ -1,5 +1,14 @@
 export interface GameState {
+  selectedAge: string | null;
+  currentTime: number;
+  currentGlucose: number;
+  activeInsulin: number;
+  basalInsulin: number;
+  activeEffects: any[];
+  gameLog: any[];
+  selectedFood: any | null;
   showMealModal: boolean;
   showInsulinModal: boolean;
-  // TODO: 여기에 필요한 상태 필드를 추가하세요 (예: 혈당, 로그, 등)
+  glucoseHistory: number[];
+  timeLabels: string[];
 }

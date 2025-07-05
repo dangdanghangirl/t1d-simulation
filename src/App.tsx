@@ -1,39 +1,27 @@
-import React, { useState } from 'react';
+import React from 'react';
 import AgeSelection from './components/AgeSelection';
 import CharacterPanel from './components/CharacterPanel';
 import GlucosePanel from './components/GlucosePanel';
+import ManagementPanel from './components/ManagementPanel';
+import TimePanel from './components/TimePanel';
+import ResultScreen from './components/ResultScreen';
+import GameLog from './components/GameLog';
+import MealModal from './components/MealModal';
+import InsulinModal from './components/InsulinModal';
+import { useDiabetesSimulator } from './hooks/useDiabetesSimulator';
 import './App.css';
 
-type AppState = {
-  selectedAge: string | null;
-  currentTime: number;
-  currentGlucose: number;
-  activeInsulin: number;
-  basalInsulin: number;
-  activeEffects: any[];
-  gameLog: any[];
-  selectedFood: any | null;
-  showMealModal: boolean;
-  showInsulinModal: boolean;
-  glucoseHistory: number[];
-  timeLabels: string[];
-};
-
 function App() {
-  const [state, setState] = useState<AppState>({
-    selectedAge: null,
-    currentTime: 8 * 60,
-    currentGlucose: 120,
-    activeInsulin: 0,
-    basalInsulin: 0,
-    activeEffects: [],
-    gameLog: [],
-    selectedFood: null,
-    showMealModal: false,
-    showInsulinModal: false,
-    glucoseHistory: [120],
-    timeLabels: ['08:00']
-  });
+  const {
+    gameState,
+    setGameState,
+    advanceTime,
+    openMealModal,
+    closeMealModal,
+    openInsulinModal,
+    closeInsulinModal,
+    logEvent
+  } = useDiabetesSimulator();
 
   const getStatus = (bg: number) => {
     if (bg <= 50) return { key: 'dangerousLow', label: '위험한 저혈당', color: '#FF0000' };
@@ -42,13 +30,13 @@ function App() {
     if (bg <= 250) return { key: 'high', label: '고혈당', color: '#FF9800' };
     return { key: 'dangerousHigh', label: '위험한 고혈당', color: '#FF0000' };
   };
-  const statusObj = getStatus(state.currentGlucose);
+  const statusObj = getStatus(gameState.currentGlucose);
 
   const facial = '😊';
   const message = '안녕하세요! 함께 혈당을 관리해봐요!';
 
-  if (!state.selectedAge) {
-    return <AgeSelection onSelect={age => setState(s => ({ ...s, selectedAge: age }))} />;
+  if (!gameState.selectedAge) {
+    return <AgeSelection onSelect={age => setGameState(s => ({ ...s, selectedAge: age }))} />;
   }
 
   return (
@@ -58,10 +46,19 @@ function App() {
         <p>실제적인 혈당 관리를 배워보세요</p>
       </header>
       <main className="main-content">
-        <CharacterPanel facial={facial} message={message} age={state.selectedAge} status={statusObj.key} />
-        <GlucosePanel glucose={state.currentGlucose} status={statusObj.key} statusLabel={statusObj.label} statusColor={statusObj.color}>
-          {/* 차트 컴포넌트 또는 캔버스 영역 추가 예정 */}
-        </GlucosePanel>
+        <div className="main-panels">
+          <CharacterPanel facial={facial} message={message} age={gameState.selectedAge} status={statusObj.key} />
+          <GlucosePanel glucose={gameState.currentGlucose} status={statusObj.key} statusLabel={statusObj.label} statusColor={statusObj.color}>
+            {/* 차트 컴포넌트 또는 캔버스 영역 추가 예정 */}
+          </GlucosePanel>
+          <ManagementPanel state={gameState} openMealModal={openMealModal} openInsulinModal={openInsulinModal} />
+          <TimePanel state={gameState} advanceTime={advanceTime} />
+        </div>
+        <GameLog state={gameState} />
+        <MealModal state={gameState} setState={setGameState} />
+        <InsulinModal state={gameState} setState={setGameState} />
+        {/* 결과 화면은 조건부 렌더링 예시 */}
+        {false && <ResultScreen /* 추후 props 연결 */ />}
       </main>
     </div>
   );
