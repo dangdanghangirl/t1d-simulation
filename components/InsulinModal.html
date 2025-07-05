@@ -1,0 +1,36 @@
+<div id="insulin-modal" class="modal hidden">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>인슐린 주입</h3>
+            <button class="modal-close">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="insulin-types">
+                <div class="insulin-type">
+                    <h4>속효성 인슐린 (볼루스)</h4>
+                    <div class="form-group">
+                        <label class="form-label">용량 (units)</label>
+                        <input type="number" class="form-control" id="rapid-insulin" min="0" max="20" step="0.5" value="0">
+                    </div>
+                    <div class="insulin-info">
+                        <small>시작: 15분, 최고: 1시간, 지속: 4시간</small>
+                    </div>
+                </div>
+                <div class="insulin-type">
+                    <h4>지속형 인슐린 (기저)</h4>
+                    <div class="form-group">
+                        <label class="form-label">용량 (units)</label>
+                        <input type="number" class="form-control" id="long-insulin" min="0" max="50" step="1" value="0">
+                    </div>
+                    <div class="insulin-info">
+                        <small>시작: 2-4시간, 피크: 없음, 지속: 24시간</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn--secondary" id="cancel-insulin">취소</button>
+            <button class="btn btn--primary" id="confirm-insulin">인슐린 주입</button>
+        </div>
+    </div>
+</div>

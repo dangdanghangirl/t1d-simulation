@@ -654,565 +654,516 @@ select.form-control {
     format('woff2');
 }
 
-/* Game-specific styles */
-.game-header {
-  background: var(--color-surface);
-  border-bottom: 1px solid var(--color-border);
-  padding: var(--space-16) 0;
-  margin-bottom: var(--space-24);
-}
+/* Custom styles for the diabetes simulation game */
 
-.game-header h1 {
+.header {
   text-align: center;
-  margin-bottom: var(--space-16);
-  color: var(--color-primary);
+  padding: var(--space-32) 0;
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 100%);
+  color: var(--color-btn-primary-text);
+  margin-bottom: var(--space-32);
+  border-radius: var(--radius-lg);
 }
 
-.header-stats {
-  display: flex;
-  justify-content: center;
-  gap: var(--space-32);
-  flex-wrap: wrap;
-}
-
-.stat {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-4);
-}
-
-.stat-label {
-  font-size: var(--font-size-sm);
-  color: var(--color-text-secondary);
-  font-weight: var(--font-weight-medium);
-}
-
-.stat-value {
-  font-size: var(--font-size-2xl);
-  font-weight: var(--font-weight-bold);
-  color: var(--color-text);
-}
-
-.stat-unit {
-  font-size: var(--font-size-sm);
-  color: var(--color-text-secondary);
-}
-
-/* Screen Management */
-.screen {
-  display: none;
-}
-
-.screen.active {
-  display: block;
-}
-
-/* Welcome Screen */
-.welcome-options {
-  display: flex;
-  gap: var(--space-16);
-  justify-content: center;
-  margin-top: var(--space-24);
-  flex-wrap: wrap;
-}
-
-/* Character Setup */
-.form-group {
-  margin-bottom: var(--space-16);
-}
-
-/* Tutorial */
-.tutorial-step {
-  display: none;
-  padding: var(--space-16);
-  border-radius: var(--radius-base);
-  background: var(--color-secondary);
-  margin-bottom: var(--space-16);
-}
-
-.tutorial-step.active {
-  display: block;
-}
-
-.tutorial-nav {
-  display: flex;
-  justify-content: space-between;
-  gap: var(--space-16);
-  margin-top: var(--space-24);
-}
-
-/* Dashboard Grid */
-.dashboard-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: var(--space-16);
-  margin-bottom: var(--space-24);
-}
-
-.dashboard-card {
-  min-height: 200px;
-}
-
-.dashboard-card h3 {
-  margin-bottom: var(--space-16);
-  color: var(--color-primary);
-  font-size: var(--font-size-lg);
-}
-
-/* Blood Glucose Display */
-.bg-display {
-  text-align: center;
-  margin-bottom: var(--space-16);
-}
-
-.bg-value {
-  font-size: var(--font-size-4xl);
-  font-weight: var(--font-weight-bold);
-  color: var(--color-text);
+.header h1 {
+  color: var(--color-btn-primary-text);
   margin-bottom: var(--space-8);
 }
 
-.bg-status {
-  font-size: var(--font-size-md);
-  padding: var(--space-6) var(--space-12);
-  border-radius: var(--radius-full);
-  font-weight: var(--font-weight-medium);
+.header p {
+  color: rgba(252, 252, 249, 0.8);
+  font-size: var(--font-size-lg);
+  margin: 0;
 }
 
-.bg-status.normal {
-  background: rgba(var(--color-success-rgb), 0.15);
-  color: var(--color-success);
-  border: 1px solid rgba(var(--color-success-rgb), 0.25);
+.main-content {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-24);
 }
 
-.bg-status.low {
-  background: rgba(var(--color-error-rgb), 0.15);
-  color: var(--color-error);
-  border: 1px solid rgba(var(--color-error-rgb), 0.25);
+@media (min-width: 768px) {
+  .main-content {
+    grid-template-columns: 2fr 1fr;
+  }
 }
 
-.bg-status.high {
-  background: rgba(var(--color-warning-rgb), 0.15);
-  color: var(--color-warning);
-  border: 1px solid rgba(var(--color-warning-rgb), 0.25);
-}
-
-.bg-actions {
+.game-status {
   display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--color-surface);
+  padding: var(--space-16);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-card-border);
+  margin-bottom: var(--space-16);
+  flex-wrap: wrap;
+  gap: var(--space-16);
+}
+
+.game-status > div {
+  display: flex;
+  align-items: center;
   gap: var(--space-8);
-  justify-content: center;
+}
+
+.game-status .label {
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
+}
+
+.game-status .unit {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+#current-glucose {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-primary);
+}
+
+.glucose-range-info {
+  display: flex;
+  gap: var(--space-16);
+  font-size: var(--font-size-sm);
+}
+
+.range-optimal {
+  color: var(--color-info);
+}
+
+.range-ideal {
+  color: var(--color-success);
+}
+
+.chart-container {
+  position: relative;
+  height: 300px;
+  width: 100%;
+}
+
+.action-panel {
+  grid-column: 1 / -1;
+}
+
+.action-buttons {
+  display: flex;
+  gap: var(--space-12);
   flex-wrap: wrap;
 }
 
-/* Insulin Panel */
-.insulin-info {
-  margin-bottom: var(--space-16);
+.action-buttons .btn {
+  flex: 1;
+  min-width: 120px;
+}
+
+/* Modal styles */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  max-width: 600px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: var(--shadow-lg);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-20);
+  border-bottom: 1px solid var(--color-card-border);
+}
+
+.modal-header h3 {
+  margin: 0;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: var(--font-size-3xl);
+  cursor: pointer;
+  color: var(--color-text-secondary);
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-base);
+}
+
+.modal-close:hover {
+  background: var(--color-secondary);
+}
+
+.modal-body {
+  padding: var(--space-20);
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-12);
+  padding: var(--space-20);
+  border-top: 1px solid var(--color-card-border);
+}
+
+/* Food selection */
+.food-selection {
+  margin-bottom: var(--space-24);
+}
+
+.food-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: var(--space-12);
+  margin-top: var(--space-16);
+}
+
+.food-item {
+  background: var(--color-surface);
+  border: 2px solid var(--color-card-border);
+  border-radius: var(--radius-base);
+  padding: var(--space-12);
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-standard);
+}
+
+.food-item:hover {
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-sm);
+}
+
+.food-item.selected {
+  border-color: var(--color-primary);
+  background: rgba(var(--color-success-rgb), 0.1);
+}
+
+.food-item h5 {
+  margin: 0 0 var(--space-8) 0;
+  font-size: var(--font-size-base);
+}
+
+.food-nutrition {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+/* Nutrition info */
+.nutrition-info {
+  background: var(--color-secondary);
+  padding: var(--space-16);
+  border-radius: var(--radius-base);
+  margin-bottom: var(--space-24);
+}
+
+.nutrition-details {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: var(--space-12);
+  margin-top: var(--space-12);
+}
+
+.nutrient {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-8);
+  background: var(--color-surface);
+  border-radius: var(--radius-sm);
+}
+
+.nutrient-label {
+  font-weight: var(--font-weight-medium);
+}
+
+.fpu-info {
+  grid-column: 1 / -1;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.fpu-info small {
+  color: var(--color-text-secondary);
+  margin-top: var(--space-4);
+}
+
+/* Insulin calculation */
+.insulin-calculation {
+  background: var(--color-surface);
+  border: 1px solid var(--color-card-border);
+  padding: var(--space-16);
+  border-radius: var(--radius-base);
+}
+
+.insulin-details {
+  margin: var(--space-12) 0;
 }
 
 .insulin-item {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   padding: var(--space-8) 0;
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-card-border);
 }
 
 .insulin-item:last-child {
   border-bottom: none;
 }
 
-.insulin-actions {
+.insulin-item.total {
+  font-weight: var(--font-weight-bold);
+  color: var(--color-primary);
+  border-top: 2px solid var(--color-primary);
+  padding-top: var(--space-12);
+  margin-top: var(--space-8);
+}
+
+.bolus-type {
+  margin-top: var(--space-16);
+}
+
+.bolus-options {
   display: flex;
-  gap: var(--space-8);
-  justify-content: center;
-  flex-wrap: wrap;
-}
-
-/* Meal Panel */
-.meal-info {
-  margin-bottom: var(--space-16);
-}
-
-.next-meal, .carb-count {
-  display: flex;
-  justify-content: space-between;
-  padding: var(--space-8) 0;
-  border-bottom: 1px solid var(--color-border);
-}
-
-.carb-count {
-  border-bottom: none;
-}
-
-.meal-actions {
-  display: flex;
-  gap: var(--space-8);
-  justify-content: center;
-  flex-wrap: wrap;
-}
-
-/* Activity Panel */
-.activity-info {
-  margin-bottom: var(--space-16);
-}
-
-.activity-item {
-  display: flex;
-  justify-content: space-between;
-  padding: var(--space-8) 0;
-  border-bottom: 1px solid var(--color-border);
-}
-
-.activity-item:last-child {
-  border-bottom: none;
-}
-
-.activity-actions {
-  display: flex;
-  gap: var(--space-8);
-  justify-content: center;
-  flex-wrap: wrap;
-}
-
-/* Time Control */
-.time-control {
-  display: flex;
-  justify-content: center;
   gap: var(--space-16);
-  margin-top: var(--space-24);
-  flex-wrap: wrap;
+  margin-top: var(--space-8);
 }
 
-/* Modal */
-.modal {
-  display: none;
-  position: fixed;
-  z-index: 1000;
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
-}
-
-.modal.active {
+.bolus-options label {
   display: flex;
   align-items: center;
-  justify-content: center;
-}
-
-.modal-content {
-  background-color: var(--color-surface);
-  padding: var(--space-24);
-  border-radius: var(--radius-lg);
-  max-width: 500px;
-  width: 90%;
-  max-height: 80vh;
-  overflow-y: auto;
-  position: relative;
-}
-
-.close {
-  position: absolute;
-  top: var(--space-16);
-  right: var(--space-16);
-  font-size: var(--font-size-2xl);
+  gap: var(--space-8);
   cursor: pointer;
-  color: var(--color-text-secondary);
 }
 
-.close:hover {
-  color: var(--color-text);
-}
-
-/* Food Selection */
-.food-grid {
+/* Insulin modal */
+.insulin-types {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: var(--space-16);
-  margin: var(--space-16) 0;
+  gap: var(--space-24);
 }
 
-.food-item {
-  padding: var(--space-16);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-base);
-  cursor: pointer;
-  transition: all var(--duration-fast) var(--ease-standard);
-}
-
-.food-item:hover {
+.insulin-type {
   background: var(--color-secondary);
-  border-color: var(--color-primary);
+  padding: var(--space-16);
+  border-radius: var(--radius-base);
 }
 
-.food-item.selected {
-  background: rgba(var(--color-primary), 0.1);
-  border-color: var(--color-primary);
+.insulin-type h4 {
+  margin-bottom: var(--space-12);
+  color: var(--color-primary);
 }
 
-.food-name {
-  font-weight: var(--font-weight-medium);
-  margin-bottom: var(--space-4);
+.insulin-info {
+  margin-top: var(--space-8);
 }
 
-.food-carbs {
-  font-size: var(--font-size-sm);
+.insulin-info small {
   color: var(--color-text-secondary);
 }
 
-.food-portion {
-  font-size: var(--font-size-sm);
-  color: var(--color-text-secondary);
+/* Education panel */
+.education-panel {
+  grid-column: 1 / -1;
 }
 
-/* Activity Selection */
-.activity-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: var(--space-16);
-  margin: var(--space-16) 0;
+@media (min-width: 768px) {
+  .education-panel {
+    grid-column: 2;
+    grid-row: 1 / 3;
+  }
 }
 
-.activity-item-card {
-  padding: var(--space-16);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-base);
-  cursor: pointer;
-  transition: all var(--duration-fast) var(--ease-standard);
-  text-align: center;
+.education-panel ul {
+  margin: var(--space-12) 0;
+  padding-left: var(--space-20);
 }
 
-.activity-item-card:hover {
-  background: var(--color-secondary);
-  border-color: var(--color-primary);
-}
-
-.activity-name {
-  font-weight: var(--font-weight-medium);
+.education-panel li {
   margin-bottom: var(--space-8);
+  line-height: var(--line-height-normal);
 }
 
-.activity-intensity {
+.education-panel strong {
+  color: var(--color-primary);
+}
+
+/* Game log */
+.game-log {
+  grid-column: 1 / -1;
+}
+
+#log-content {
+  max-height: 200px;
+  overflow-y: auto;
+  font-family: var(--font-family-mono);
   font-size: var(--font-size-sm);
+  line-height: var(--line-height-tight);
+}
+
+#log-content p {
+  margin: var(--space-4) 0;
+  padding: var(--space-4) 0;
+  border-bottom: 1px solid var(--color-card-border);
+}
+
+.log-time {
   color: var(--color-text-secondary);
-  margin-bottom: var(--space-4);
-}
-
-.activity-effect {
-  font-size: var(--font-size-sm);
-  color: var(--color-info);
-}
-
-/* Insulin Calculator */
-.insulin-calculator {
-  margin: var(--space-16) 0;
-}
-
-.calculator-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: var(--space-8) 0;
-  border-bottom: 1px solid var(--color-border);
-}
-
-.calculator-row:last-child {
-  border-bottom: none;
   font-weight: var(--font-weight-medium);
 }
 
-.calculator-input {
-  width: 80px;
-  padding: var(--space-4) var(--space-8);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  font-size: var(--font-size-sm);
+.log-meal {
+  color: var(--color-success);
 }
 
-/* Blood Glucose Chart */
-.bg-chart-container {
-  margin: var(--space-16) 0;
-  height: 200px;
+.log-insulin {
+  color: var(--color-primary);
 }
 
-.bg-chart {
-  width: 100%;
-  height: 100%;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-base);
-}
-
-/* Emergency Alert */
-.emergency-alert {
-  background: rgba(var(--color-error-rgb), 0.15);
-  border: 1px solid rgba(var(--color-error-rgb), 0.25);
-  color: var(--color-error);
-  padding: var(--space-16);
-  border-radius: var(--radius-base);
-  margin-bottom: var(--space-16);
-  text-align: center;
-  font-weight: var(--font-weight-medium);
-}
-
-.emergency-alert.warning {
-  background: rgba(var(--color-warning-rgb), 0.15);
-  border: 1px solid rgba(var(--color-warning-rgb), 0.25);
+.log-glucose {
   color: var(--color-warning);
 }
 
-/* Footer */
-.game-footer {
-  margin-top: var(--space-32);
-  padding: var(--space-16) 0;
-  border-top: 1px solid var(--color-border);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: var(--space-16);
-}
-
-.footer-tips {
-  flex: 1;
-  min-width: 250px;
-}
-
-.footer-tips h4 {
-  margin-bottom: var(--space-8);
-  color: var(--color-primary);
-  font-size: var(--font-size-md);
-}
-
-.footer-tips p {
-  margin: 0;
-  color: var(--color-text-secondary);
-  font-size: var(--font-size-sm);
-}
-
-.footer-stats {
-  display: flex;
-  gap: var(--space-24);
-  flex-wrap: wrap;
-}
-
-.stat-small {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-}
-
-.stat-small span:first-child {
-  font-size: var(--font-size-sm);
-  color: var(--color-text-secondary);
-  margin-bottom: var(--space-4);
-}
-
-.stat-small span:last-child {
-  font-size: var(--font-size-lg);
-  font-weight: var(--font-weight-bold);
-  color: var(--color-text);
-}
-
-/* Responsive Design */
+/* Responsive design */
 @media (max-width: 768px) {
-  .header-stats {
-    gap: var(--space-16);
+  .container {
+    padding: var(--space-8);
   }
   
-  .dashboard-grid {
+  .game-status {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .game-status > div {
+    justify-content: space-between;
+  }
+  
+  .action-buttons {
+    flex-direction: column;
+  }
+  
+  .action-buttons .btn {
+    width: 100%;
+  }
+  
+  .modal-content {
+    width: 95%;
+  }
+  
+  .nutrition-details {
     grid-template-columns: 1fr;
   }
   
-  .welcome-options {
-    flex-direction: column;
-    align-items: center;
-  }
-  
-  .tutorial-nav {
+  .bolus-options {
     flex-direction: column;
     gap: var(--space-8);
   }
-  
-  .time-control {
-    flex-direction: column;
-    align-items: center;
+}
+
+/* Chart specific styles */
+.chart-container canvas {
+  max-height: 300px;
+}
+
+/* Status colors for glucose levels */
+.glucose-low {
+  color: var(--color-error) !important;
+}
+
+.glucose-high {
+  color: var(--color-warning) !important;
+}
+
+.glucose-normal {
+  color: var(--color-success) !important;
+}
+
+/* Animation for updates */
+.update-animation {
+  animation: pulse 0.5s ease-in-out;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
   }
-  
-  .game-footer {
-    flex-direction: column;
-    text-align: center;
+  50% {
+    transform: scale(1.05);
   }
-  
-  .footer-stats {
-    justify-content: center;
+  100% {
+    transform: scale(1);
   }
 }
 
-/* Scenario Styles */
-.scenario-card {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-base);
-  padding: var(--space-16);
-  margin-bottom: var(--space-16);
+/* Loading state */
+.loading {
+  opacity: 0.7;
+  pointer-events: none;
 }
 
-.scenario-title {
-  font-weight: var(--font-weight-medium);
-  margin-bottom: var(--space-8);
-  color: var(--color-primary);
+/* Tooltips */
+.tooltip {
+  position: relative;
+  cursor: help;
 }
 
-.scenario-description {
-  color: var(--color-text-secondary);
-  margin-bottom: var(--space-12);
+.tooltip:hover::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--color-text);
+  color: var(--color-surface);
+  padding: var(--space-8);
+  border-radius: var(--radius-sm);
   font-size: var(--font-size-sm);
+  white-space: nowrap;
+  z-index: 1000;
 }
 
-.scenario-tasks {
-  list-style: none;
-  padding: 0;
-  margin: 0;
+/* Progress bars for insulin activity */
+.insulin-activity {
+  margin-top: var(--space-16);
 }
 
-.scenario-tasks li {
-  padding: var(--space-4) 0;
-  font-size: var(--font-size-sm);
-  color: var(--color-text);
-}
-
-.scenario-tasks li:before {
-  content: "✓ ";
-  color: var(--color-success);
-  font-weight: var(--font-weight-bold);
-}
-
-/* Progress Indicators */
-.progress-bar {
-  width: 100%;
-  height: 8px;
+.activity-bar {
   background: var(--color-secondary);
+  height: 8px;
   border-radius: var(--radius-full);
   overflow: hidden;
-  margin: var(--space-8) 0;
+  margin-bottom: var(--space-8);
 }
 
-.progress-fill {
+.activity-fill {
   height: 100%;
   background: var(--color-primary);
   transition: width var(--duration-normal) var(--ease-standard);
 }
 
-.progress-fill.success {
-  background: var(--color-success);
-}
-
-.progress-fill.warning {
-  background: var(--color-warning);
-}
-
-.progress-fill.error {
-  background: var(--color-error);
+.activity-label {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-4);
 }

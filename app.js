@@ -1,814 +1,634 @@
-// Game State Management
-class DiabetesSimulation {
+// Type 1 Diabetes Simulation Game
+class DiabetesSimulator {
     constructor() {
         this.gameState = {
-            character: {
-                name: '',
-                age: 25,
-                monitoringMethod: 'cgm',
-                difficulty: 'beginner'
-            },
-            bloodGlucose: 120,
-            insulinOnBoard: {
-                rapid: 0,
-                long: 0,
-                rapidTime: null,
-                longTime: null
-            },
-            energy: 85,
-            gameTime: new Date(),
-            realStartTime: new Date(),
-            isPaused: false,
-            dailyStats: {
-                carbs: 0,
-                meals: 0,
-                bgChecks: 0,
-                activities: []
-            },
-            bgHistory: [],
-            timeInRange: 78,
-            managementScore: 85,
-            currentScenario: null,
-            tutorialStep: 1,
-            maxTutorialSteps: 5
+            currentTime: 8 * 60, // 8:00 AM in minutes
+            currentGlucose: 120,
+            activeInsulin: 0,
+            basalInsulin: 0,
+            activeEffects: [],
+            gameLog: [],
+            selectedFood: null,
+            chart: null
         };
-        
-        // Game data from JSON
-        this.gameData = {
-            bloodGlucoseRanges: {
-                low: 70,
-                targetMin: 80,
-                targetMax: 180,
-                high: 250
-            },
-            insulinTypes: {
-                rapidActing: {
-                    name: "초속효성 인슐린",
-                    onset: 15,
-                    peak: 90,
-                    duration: 240
-                },
-                longActing: {
-                    name: "지속형 인슐린",
-                    onset: 60,
-                    peak: 0,
-                    duration: 1440
-                }
-            },
-            koreanFoods: [
-                {name: "백미밥", carbs: 55, portion: "1공기"},
-                {name: "김치찌개", carbs: 15, portion: "1그릇"},
-                {name: "불고기", carbs: 5, portion: "100g"},
-                {name: "사과", carbs: 25, portion: "1개"},
-                {name: "바나나", carbs: 27, portion: "1개"},
-                {name: "우유", carbs: 12, portion: "200ml"},
-                {name: "라면", carbs: 80, portion: "1봉지"},
-                {name: "토스트", carbs: 30, portion: "2장"},
-                {name: "현미밥", carbs: 45, portion: "1공기"},
-                {name: "된장찌개", carbs: 12, portion: "1그릇"},
-                {name: "삼겹살", carbs: 2, portion: "100g"},
-                {name: "오렌지", carbs: 20, portion: "1개"}
-            ],
-            activities: [
-                {name: "걷기", intensity: "low", bgEffect: -10, duration: 30},
-                {name: "조깅", intensity: "medium", bgEffect: -25, duration: 30},
-                {name: "수영", intensity: "high", bgEffect: -40, duration: 30},
-                {name: "요가", intensity: "low", bgEffect: -5, duration: 30},
-                {name: "계단 오르기", intensity: "medium", bgEffect: -15, duration: 15},
-                {name: "자전거 타기", intensity: "medium", bgEffect: -20, duration: 45}
-            ],
-            scenarios: [
-                {
-                    name: "아침 루틴",
-                    description: "기상 후 혈당 체크하고 아침 식사 준비",
-                    tasks: ["혈당 측정", "지속형 인슐린 주사", "아침 식사", "초속효성 인슐린 주사"]
-                },
-                {
-                    name: "회사/학교 점심",
-                    description: "외식 상황에서 탄수화물 계산하기",
-                    tasks: ["메뉴 선택", "탄수화물 추정", "인슐린 계산", "식사 후 혈당 체크"]
-                },
-                {
-                    name: "운동 전 준비",
-                    description: "운동으로 인한 혈당 변화 대비",
-                    tasks: ["운동 전 혈당 체크", "필요시 간식 섭취", "운동", "운동 후 혈당 체크"]
-                },
-                {
-                    name: "저혈당 응급상황",
-                    description: "혈당이 70mg/dL 이하로 떨어진 상황",
-                    tasks: ["증상 인식", "빠른 탄수화물 섭취", "15분 후 재측정", "필요시 추가 처치"]
-                }
-            ],
-            tips: [
-                "혈당은 하루에 최소 4-7회 측정하는 것이 좋습니다",
-                "탄수화물 15g은 보통 혈당을 약 45-60mg/dL 올립니다",
-                "운동 전에는 혈당이 100mg/dL 이상인지 확인하세요",
-                "스트레스와 수면 부족은 혈당을 올릴 수 있습니다",
-                "저혈당 시에는 빠른 탄수화물을 15-20g 섭취하세요",
-                "인슐린 주사 부위를 매번 바꿔주세요",
-                "혈당 측정 전에는 손을 깨끗이 씻어주세요"
-            ]
-        };
+
+        this.glucoseHistory = [];
+        this.timeLabels = [];
+        this.insulinData = this.loadInsulinData();
+        this.foodData = this.loadFoodData();
+        this.macronutrientData = this.loadMacronutrientData();
         
         this.init();
     }
-    
-    init() {
-        this.updateDisplay();
-        this.showRandomTip();
-        this.startGameLoop();
-    }
-    
-    // Game Loop
-    startGameLoop() {
-        setInterval(() => {
-            if (!this.gameState.isPaused) {
-                this.updateGameTime();
-                this.simulateBloodGlucose();
-                this.updateInsulinOnBoard();
-                this.checkForEmergencies();
-                this.updateDisplay();
-            }
-        }, 5000); // Update every 5 seconds
-    }
-    
-    updateGameTime() {
-        const now = new Date();
-        const elapsed = now - this.gameState.realStartTime;
-        this.gameState.gameTime = new Date(this.gameState.gameTime.getTime() + elapsed * 10); // 10x speed
-        this.gameState.realStartTime = now;
-    }
-    
-    simulateBloodGlucose() {
-        const difficulty = this.gameState.character.difficulty;
-        let variability = 0;
-        
-        switch(difficulty) {
-            case 'beginner':
-                variability = 5;
-                break;
-            case 'intermediate':
-                variability = 10;
-                break;
-            case 'advanced':
-                variability = 15;
-                break;
-        }
-        
-        // Random variation
-        const variation = (Math.random() - 0.5) * variability;
-        
-        // Insulin effect
-        const insulinEffect = this.calculateInsulinEffect();
-        
-        // Natural glucose rise
-        const naturalRise = 2;
-        
-        this.gameState.bloodGlucose += variation - insulinEffect + naturalRise;
-        this.gameState.bloodGlucose = Math.max(40, Math.min(400, this.gameState.bloodGlucose));
-        
-        // Record history
-        this.gameState.bgHistory.push({
-            time: new Date(this.gameState.gameTime),
-            value: this.gameState.bloodGlucose
-        });
-        
-        // Keep only last 24 hours
-        if (this.gameState.bgHistory.length > 288) {
-            this.gameState.bgHistory.shift();
-        }
-        
-        this.updateTimeInRange();
-    }
-    
-    calculateInsulinEffect() {
-        let effect = 0;
-        const now = this.gameState.gameTime;
-        
-        // Rapid acting insulin
-        if (this.gameState.insulinOnBoard.rapidTime) {
-            const minutesElapsed = (now - this.gameState.insulinOnBoard.rapidTime) / 60000;
-            if (minutesElapsed < 240) {
-                const peakEffect = this.gameState.insulinOnBoard.rapid * 50;
-                const timeEffect = Math.sin((minutesElapsed / 240) * Math.PI);
-                effect += peakEffect * timeEffect;
-            }
-        }
-        
-        // Long acting insulin
-        if (this.gameState.insulinOnBoard.longTime) {
-            const minutesElapsed = (now - this.gameState.insulinOnBoard.longTime) / 60000;
-            if (minutesElapsed < 1440) {
-                effect += this.gameState.insulinOnBoard.long * 0.5;
-            }
-        }
-        
-        return effect;
-    }
-    
-    updateInsulinOnBoard() {
-        const now = this.gameState.gameTime;
-        
-        // Decay rapid acting insulin
-        if (this.gameState.insulinOnBoard.rapidTime) {
-            const minutesElapsed = (now - this.gameState.insulinOnBoard.rapidTime) / 60000;
-            if (minutesElapsed >= 240) {
-                this.gameState.insulinOnBoard.rapid = 0;
-                this.gameState.insulinOnBoard.rapidTime = null;
-            }
-        }
-        
-        // Decay long acting insulin
-        if (this.gameState.insulinOnBoard.longTime) {
-            const minutesElapsed = (now - this.gameState.insulinOnBoard.longTime) / 60000;
-            if (minutesElapsed >= 1440) {
-                this.gameState.insulinOnBoard.long = 0;
-                this.gameState.insulinOnBoard.longTime = null;
-            }
-        }
-    }
-    
-    updateTimeInRange() {
-        const inRange = this.gameState.bgHistory.filter(entry => 
-            entry.value >= this.gameData.bloodGlucoseRanges.targetMin && 
-            entry.value <= this.gameData.bloodGlucoseRanges.targetMax
-        ).length;
-        
-        this.gameState.timeInRange = Math.round((inRange / this.gameState.bgHistory.length) * 100);
-    }
-    
-    checkForEmergencies() {
-        const bg = this.gameState.bloodGlucose;
-        
-        if (bg < this.gameData.bloodGlucoseRanges.low) {
-            this.triggerEmergency('low');
-        } else if (bg > this.gameData.bloodGlucoseRanges.high) {
-            this.triggerEmergency('high');
-        }
-    }
-    
-    triggerEmergency(type) {
-        const emergencyMessages = {
-            low: {
-                title: "저혈당 경고!",
-                message: "혈당이 70mg/dL 이하입니다. 즉시 빠른 탄수화물을 섭취하세요!",
-                actions: ["포도당 정제 섭취", "오렌지 주스 마시기", "사탕 먹기"]
+
+    loadInsulinData() {
+        return {
+            rapid_acting: {
+                onset: 15,
+                peak: 60,
+                duration: 240,
+                effectiveness_curve: [0, 20, 80, 100, 80, 60, 40, 20, 10, 0]
             },
-            high: {
-                title: "고혈당 경고!",
-                message: "혈당이 250mg/dL 이상입니다. 수분 섭취와 인슐린 주사를 고려하세요.",
-                actions: ["물 마시기", "인슐린 주사", "의료진 연락"]
+            long_acting: {
+                onset: 120,
+                peak: 0,
+                duration: 1440,
+                effectiveness_curve: [0, 0, 0, 0, 10, 40, 70, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 75, 70, 60, 50, 40, 30, 20, 10, 0]
             }
         };
-        
-        const emergency = emergencyMessages[type];
-        this.showEmergencyModal(emergency);
     }
-    
-    showEmergencyModal(emergency) {
-        const modal = document.getElementById('actionModal');
-        const content = document.getElementById('modalContent');
-        
-        content.innerHTML = `
-            <div class="emergency-alert ${emergency.title.includes('저혈당') ? 'error' : 'warning'}">
-                <h3>${emergency.title}</h3>
-                <p>${emergency.message}</p>
-                <div class="emergency-actions">
-                    ${emergency.actions.map(action => 
-                        `<button class="btn btn--primary btn--sm" onclick="handleEmergencyAction('${action}')">${action}</button>`
-                    ).join('')}
-                </div>
-            </div>
-        `;
-        
-        modal.classList.add('active');
+
+    loadFoodData() {
+        return [
+            { name: "백미밥 (200g)", carbs: 72, protein: 6, fat: 0.6 },
+            { name: "김치찌개 (1인분)", carbs: 8, protein: 15, fat: 12 },
+            { name: "불고기 (150g)", carbs: 8, protein: 35, fat: 15 },
+            { name: "삼겹살 구이 (200g)", carbs: 0, protein: 34, fat: 58 },
+            { name: "치킨 (순살 200g)", carbs: 15, protein: 40, fat: 25 },
+            { name: "피자 (2조각)", carbs: 45, protein: 20, fat: 18 },
+            { name: "된장찌개 (1인분)", carbs: 6, protein: 8, fat: 3 },
+            { name: "잡곡밥 (200g)", carbs: 60, protein: 8, fat: 2 }
+        ];
     }
-    
-    updateDisplay() {
-        // Update header stats
-        document.getElementById('currentBG').textContent = Math.round(this.gameState.bloodGlucose);
-        document.getElementById('gameTime').textContent = this.formatTime(this.gameState.gameTime);
-        document.getElementById('energy').textContent = this.gameState.energy;
-        
-        // Update dashboard
-        document.getElementById('dashboardBG').textContent = Math.round(this.gameState.bloodGlucose);
-        document.getElementById('bgStatus').textContent = this.getBGStatus();
-        document.getElementById('bgStatus').className = `bg-status ${this.getBGStatusClass()}`;
-        
-        // Update insulin times
-        document.getElementById('longActingTime').textContent = this.getInsulinTimeText('long');
-        document.getElementById('rapidActingTime').textContent = this.getInsulinTimeText('rapid');
-        
-        // Update meal info
-        document.getElementById('nextMeal').textContent = this.getNextMealText();
-        document.getElementById('dailyCarbs').textContent = this.gameState.dailyStats.carbs + 'g';
-        
-        // Update activity
-        document.getElementById('dailyActivity').textContent = this.getDailyActivityText();
-        document.getElementById('activityEnergy').textContent = this.gameState.energy + '%';
-        
-        // Update footer stats
-        document.getElementById('timeInRange').textContent = this.gameState.timeInRange + '%';
-        document.getElementById('managementScore').textContent = this.gameState.managementScore;
+
+    loadMacronutrientData() {
+        return {
+            carbohydrate: {
+                glucose_conversion: 100,
+                onset_time: 30,
+                peak_time: 90,
+                effect_duration: 180,
+                calories_per_gram: 4
+            },
+            protein: {
+                glucose_conversion: 50,
+                onset_time: 180,
+                peak_time: 300,
+                effect_duration: 360,
+                calories_per_gram: 4
+            },
+            fat: {
+                glucose_conversion: 10,
+                onset_time: 120,
+                peak_time: 240,
+                effect_duration: 300,
+                calories_per_gram: 9,
+                gastric_delay: true
+            }
+        };
     }
-    
-    getBGStatus() {
-        const bg = this.gameState.bloodGlucose;
-        if (bg < this.gameData.bloodGlucoseRanges.low) return '저혈당';
-        if (bg > this.gameData.bloodGlucoseRanges.high) return '고혈당';
-        if (bg >= this.gameData.bloodGlucoseRanges.targetMin && bg <= this.gameData.bloodGlucoseRanges.targetMax) return '정상';
-        return '주의';
-    }
-    
-    getBGStatusClass() {
-        const bg = this.gameState.bloodGlucose;
-        if (bg < this.gameData.bloodGlucoseRanges.low) return 'low';
-        if (bg > this.gameData.bloodGlucoseRanges.high) return 'high';
-        return 'normal';
-    }
-    
-    getInsulinTimeText(type) {
-        const time = this.gameState.insulinOnBoard[type + 'Time'];
-        if (!time) return '주사 필요';
+
+    init() {
+        this.setupChart();
+        this.setupEventListeners();
+        this.updateDisplay();
+        this.logEvent("게임을 시작했습니다. 혈당을 80-180 mg/dL 범위로 유지하세요.");
         
-        const hoursAgo = Math.floor((this.gameState.gameTime - time) / 3600000);
-        if (hoursAgo < 1) return '방금 전';
-        return `${hoursAgo}시간 전`;
+        // Initialize with some glucose history
+        for (let i = 0; i < 10; i++) {
+            this.timeLabels.push(this.formatTime(this.gameState.currentTime - (10 - i) * 30));
+            this.glucoseHistory.push(120 + Math.random() * 20 - 10);
+        }
+        this.updateChart();
     }
-    
-    getNextMealText() {
-        const hour = this.gameState.gameTime.getHours();
-        if (hour < 8) return '아침 (08:00)';
-        if (hour < 12) return '점심 (12:00)';
-        if (hour < 18) return '저녁 (18:00)';
-        return '야식 (21:00)';
-    }
-    
-    getDailyActivityText() {
-        const activities = this.gameState.dailyStats.activities;
-        if (activities.length === 0) return '활동 없음';
-        return activities[activities.length - 1].name + ' ' + activities[activities.length - 1].duration + '분';
-    }
-    
-    formatTime(date) {
-        return date.toLocaleTimeString('ko-KR', { 
-            hour: '2-digit', 
-            minute: '2-digit',
-            hour12: false 
+
+    setupChart() {
+        const ctx = document.getElementById('glucose-chart').getContext('2d');
+        this.gameState.chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: this.timeLabels,
+                datasets: [{
+                    label: '혈당 (mg/dL)',
+                    data: this.glucoseHistory,
+                    borderColor: '#1FB8CD',
+                    backgroundColor: 'rgba(31, 184, 205, 0.1)',
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 4,
+                    pointHoverRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    intersect: false,
+                    mode: 'index'
+                },
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        min: 50,
+                        max: 300,
+                        grid: {
+                            color: function(context) {
+                                if (context.tick.value === 80 || context.tick.value === 180) {
+                                    return '#1FB8CD';
+                                } else if (context.tick.value === 100 || context.tick.value === 140) {
+                                    return '#B4413C';
+                                }
+                                return 'rgba(94, 82, 64, 0.2)';
+                            }
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            title: function(context) {
+                                return `시간: ${context[0].label}`;
+                            },
+                            label: function(context) {
+                                return `혈당: ${context.parsed.y.toFixed(1)} mg/dL`;
+                            }
+                        }
+                    }
+                }
+            }
         });
     }
-    
-    showRandomTip() {
-        const tips = this.gameData.tips;
-        const randomTip = tips[Math.floor(Math.random() * tips.length)];
-        document.getElementById('dailyTip').textContent = randomTip;
-    }
-    
-    // Save/Load functionality
-    saveGame() {
-        const saveData = {
-            gameState: this.gameState,
-            timestamp: new Date().toISOString()
-        };
-        
-        try {
-            const jsonData = JSON.stringify(saveData);
-            const blob = new Blob([jsonData], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `diabetes-sim-${new Date().toISOString().split('T')[0]}.json`;
-            a.click();
-            URL.revokeObjectURL(url);
-            
-            this.showMessage('게임이 저장되었습니다!', 'success');
-        } catch (error) {
-            this.showMessage('저장 중 오류가 발생했습니다.', 'error');
-        }
-    }
-    
-    showMessage(message, type = 'info') {
-        const messageDiv = document.createElement('div');
-        messageDiv.className = `status status--${type}`;
-        messageDiv.textContent = message;
-        messageDiv.style.position = 'fixed';
-        messageDiv.style.top = '20px';
-        messageDiv.style.right = '20px';
-        messageDiv.style.zIndex = '1001';
-        
-        document.body.appendChild(messageDiv);
-        
-        setTimeout(() => {
-            messageDiv.remove();
-        }, 3000);
-    }
-}
 
-// Global game instance
-let game;
+    setupEventListeners() {
+        // Action buttons
+        document.getElementById('meal-btn').addEventListener('click', () => this.openMealModal());
+        document.getElementById('insulin-btn').addEventListener('click', () => this.openInsulinModal());
+        document.getElementById('exercise-btn').addEventListener('click', () => this.handleExercise());
+        document.getElementById('time-btn').addEventListener('click', () => this.advanceTime());
 
-// Screen navigation functions
-function showScreen(screenId) {
-    document.querySelectorAll('.screen').forEach(screen => {
-        screen.classList.remove('active');
-    });
-    document.getElementById(screenId).classList.add('active');
-}
+        // Modal controls
+        document.getElementById('cancel-meal').addEventListener('click', () => this.closeMealModal());
+        document.getElementById('confirm-meal').addEventListener('click', () => this.confirmMeal());
+        document.getElementById('cancel-insulin').addEventListener('click', () => this.closeInsulinModal());
+        document.getElementById('confirm-insulin').addEventListener('click', () => this.confirmInsulin());
 
-function startGame() {
-    showScreen('characterSetup');
-}
-
-function startTutorial() {
-    showScreen('tutorialScreen');
-    game = new DiabetesSimulation();
-}
-
-function loadGame() {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = '.json';
-    input.onchange = function(event) {
-        const file = event.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const saveData = JSON.parse(e.target.result);
-                    game = new DiabetesSimulation();
-                    game.gameState = saveData.gameState;
-                    game.updateDisplay();
-                    showScreen('gameDashboard');
-                    game.showMessage('게임이 불러와졌습니다!', 'success');
-                } catch (error) {
-                    alert('잘못된 저장 파일입니다.');
+        // Close modal buttons
+        document.querySelectorAll('.modal-close').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const modal = e.target.closest('.modal');
+                if (modal) {
+                    modal.classList.add('hidden');
+                    if (modal.id === 'meal-modal') {
+                        this.resetMealModal();
+                    } else if (modal.id === 'insulin-modal') {
+                        this.resetInsulinModal();
+                    }
                 }
-            };
-            reader.readAsText(file);
+            });
+        });
+
+        // Close modal on outside click
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.classList.add('hidden');
+                    if (modal.id === 'meal-modal') {
+                        this.resetMealModal();
+                    } else if (modal.id === 'insulin-modal') {
+                        this.resetInsulinModal();
+                    }
+                }
+            });
+        });
+    }
+
+    openMealModal() {
+        this.populateFoodGrid();
+        this.resetNutritionInfo();
+        document.getElementById('meal-modal').classList.remove('hidden');
+    }
+
+    closeMealModal() {
+        document.getElementById('meal-modal').classList.add('hidden');
+        this.resetMealModal();
+    }
+
+    resetMealModal() {
+        this.gameState.selectedFood = null;
+        this.resetNutritionInfo();
+        document.querySelectorAll('.food-item').forEach(item => {
+            item.classList.remove('selected');
+        });
+    }
+
+    openInsulinModal() {
+        document.getElementById('insulin-modal').classList.remove('hidden');
+    }
+
+    closeInsulinModal() {
+        document.getElementById('insulin-modal').classList.add('hidden');
+        this.resetInsulinModal();
+    }
+
+    resetInsulinModal() {
+        document.getElementById('rapid-insulin').value = '0';
+        document.getElementById('long-insulin').value = '0';
+    }
+
+    populateFoodGrid() {
+        const grid = document.getElementById('food-grid');
+        grid.innerHTML = '';
+
+        this.foodData.forEach((food, index) => {
+            const foodItem = document.createElement('div');
+            foodItem.className = 'food-item';
+            foodItem.innerHTML = `
+                <h5>${food.name}</h5>
+                <div class="food-nutrition">
+                    <span>탄수화물: ${food.carbs}g</span>
+                    <span>단백질: ${food.protein}g</span>
+                    <span>지방: ${food.fat}g</span>
+                </div>
+            `;
+            
+            foodItem.addEventListener('click', () => {
+                document.querySelectorAll('.food-item').forEach(item => {
+                    item.classList.remove('selected');
+                });
+                foodItem.classList.add('selected');
+                this.gameState.selectedFood = { ...food };
+                this.updateNutritionInfo();
+            });
+            
+            grid.appendChild(foodItem);
+        });
+    }
+
+    resetNutritionInfo() {
+        document.getElementById('carbs-amount').textContent = '0';
+        document.getElementById('protein-amount').textContent = '0';
+        document.getElementById('fat-amount').textContent = '0';
+        document.getElementById('fpu-amount').textContent = '0.0';
+        document.getElementById('carb-insulin').textContent = '0';
+        document.getElementById('fpu-insulin').textContent = '0';
+        document.getElementById('total-insulin').textContent = '0';
+    }
+
+    updateNutritionInfo() {
+        const food = this.gameState.selectedFood;
+        if (!food) {
+            this.resetNutritionInfo();
+            return;
         }
-    };
-    input.click();
-}
 
-function finishSetup() {
-    const name = document.getElementById('characterName').value;
-    const age = parseInt(document.getElementById('characterAge').value);
-    const monitoring = document.getElementById('monitoringMethod').value;
-    const difficulty = document.getElementById('difficulty').value;
-    
-    if (!name.trim()) {
-        alert('이름을 입력해주세요.');
-        return;
+        // Update nutrition display
+        document.getElementById('carbs-amount').textContent = food.carbs;
+        document.getElementById('protein-amount').textContent = food.protein;
+        document.getElementById('fat-amount').textContent = food.fat;
+
+        // Calculate FPU
+        const fpu = this.calculateFPU(food.protein, food.fat);
+        document.getElementById('fpu-amount').textContent = fpu.toFixed(1);
+
+        // Calculate insulin requirements
+        const carbInsulin = this.calculateCarbInsulin(food.carbs);
+        const fpuInsulin = this.calculateFPUInsulin(fpu);
+        const totalInsulin = carbInsulin + fpuInsulin;
+
+        document.getElementById('carb-insulin').textContent = carbInsulin.toFixed(1);
+        document.getElementById('fpu-insulin').textContent = fpuInsulin.toFixed(1);
+        document.getElementById('total-insulin').textContent = totalInsulin.toFixed(1);
     }
-    
-    game = new DiabetesSimulation();
-    game.gameState.character = { name, age, monitoringMethod: monitoring, difficulty };
-    
-    showScreen('gameDashboard');
-    game.showMessage(`${name}님, 환영합니다!`, 'success');
-}
 
-// Tutorial functions
-function nextTutorial() {
-    const currentStep = document.querySelector('.tutorial-step.active');
-    const nextStep = currentStep.nextElementSibling;
-    
-    if (nextStep && nextStep.classList.contains('tutorial-step')) {
-        currentStep.classList.remove('active');
-        nextStep.classList.add('active');
+    calculateFPU(protein, fat) {
+        const proteinCal = protein * 4;
+        const fatCal = fat * 9;
+        return (proteinCal + fatCal) / 100;
+    }
+
+    calculateCarbInsulin(carbs) {
+        // Insulin-to-carb ratio of 1:10
+        return carbs / 10;
+    }
+
+    calculateFPUInsulin(fpu) {
+        // 1 FPU = 1 unit of insulin
+        return fpu;
+    }
+
+    confirmMeal() {
+        const food = this.gameState.selectedFood;
+        if (!food) {
+            alert('음식을 선택해주세요.');
+            return;
+        }
+
+        const bolusType = document.querySelector('input[name="bolus-type"]:checked').value;
+        const fpu = this.calculateFPU(food.protein, food.fat);
         
-        if (nextStep.dataset.step == 5) {
-            document.querySelector('.tutorial-nav .btn--primary').textContent = '완료';
-            document.querySelector('.tutorial-nav .btn--primary').onclick = finishTutorial;
+        // Add macronutrient effects
+        this.addMacronutrientEffect('carbohydrate', food.carbs);
+        this.addMacronutrientEffect('protein', food.protein);
+        this.addMacronutrientEffect('fat', food.fat);
+
+        // Auto-inject calculated insulin
+        const carbInsulin = this.calculateCarbInsulin(food.carbs);
+        const fpuInsulin = this.calculateFPUInsulin(fpu);
+        
+        if (bolusType === 'normal') {
+            this.addInsulinEffect('rapid_acting', carbInsulin + fpuInsulin);
+            this.logEvent(`${food.name} 섭취 (일반 주입: ${(carbInsulin + fpuInsulin).toFixed(1)} units)`);
+        } else {
+            // Extended bolus
+            this.addInsulinEffect('rapid_acting', carbInsulin + fpuInsulin * 0.3);
+            this.addExtendedBolusEffect(fpuInsulin * 0.7, this.getExtendedBolusDuration(fpu));
+            this.logEvent(`${food.name} 섭취 (연장 주입: 즉시 ${(carbInsulin + fpuInsulin * 0.3).toFixed(1)} units, 연장 ${(fpuInsulin * 0.7).toFixed(1)} units)`);
+        }
+
+        this.closeMealModal();
+        this.updateDisplay();
+    }
+
+    addMacronutrientEffect(type, amount) {
+        const macro = this.macronutrientData[type];
+        if (amount === 0) return;
+
+        const effect = {
+            type: 'macronutrient',
+            macroType: type,
+            amount: amount,
+            startTime: this.gameState.currentTime,
+            onsetTime: this.gameState.currentTime + macro.onset_time,
+            peakTime: this.gameState.currentTime + macro.peak_time,
+            endTime: this.gameState.currentTime + macro.effect_duration,
+            conversion: macro.glucose_conversion
+        };
+
+        this.gameState.activeEffects.push(effect);
+    }
+
+    addInsulinEffect(type, units) {
+        if (units === 0) return;
+
+        const insulin = this.insulinData[type];
+        const effect = {
+            type: 'insulin',
+            insulinType: type,
+            units: units,
+            startTime: this.gameState.currentTime,
+            onsetTime: this.gameState.currentTime + insulin.onset,
+            endTime: this.gameState.currentTime + insulin.duration,
+            effectiveness: insulin.effectiveness_curve
+        };
+
+        this.gameState.activeEffects.push(effect);
+    }
+
+    addExtendedBolusEffect(units, duration) {
+        const effect = {
+            type: 'extended_bolus',
+            units: units,
+            duration: duration,
+            startTime: this.gameState.currentTime,
+            endTime: this.gameState.currentTime + duration,
+            unitsPerMinute: units / duration
+        };
+
+        this.gameState.activeEffects.push(effect);
+    }
+
+    getExtendedBolusDuration(fpu) {
+        if (fpu >= 4) return 480; // 8 hours
+        if (fpu >= 3) return 300; // 5 hours
+        if (fpu >= 2) return 240; // 4 hours
+        return 180; // 3 hours
+    }
+
+    confirmInsulin() {
+        const rapidUnits = parseFloat(document.getElementById('rapid-insulin').value) || 0;
+        const longUnits = parseFloat(document.getElementById('long-insulin').value) || 0;
+
+        if (rapidUnits > 0) {
+            this.addInsulinEffect('rapid_acting', rapidUnits);
+            this.logEvent(`속효성 인슐린 ${rapidUnits} units 주입`);
+        }
+
+        if (longUnits > 0) {
+            this.addInsulinEffect('long_acting', longUnits);
+            this.logEvent(`지속형 인슐린 ${longUnits} units 주입`);
+        }
+
+        if (rapidUnits === 0 && longUnits === 0) {
+            alert('인슐린 용량을 입력해주세요.');
+            return;
+        }
+
+        this.closeInsulinModal();
+        this.updateDisplay();
+    }
+
+    handleExercise() {
+        // Simple exercise effect - lowers glucose
+        const glucoseReduction = 20 + Math.random() * 20;
+        this.gameState.currentGlucose = Math.max(50, this.gameState.currentGlucose - glucoseReduction);
+        this.logEvent(`운동으로 혈당 ${glucoseReduction.toFixed(1)} mg/dL 감소`);
+        this.updateDisplay();
+        this.updateChart();
+    }
+
+    advanceTime() {
+        const timeStep = 30; // 30 minutes
+        this.gameState.currentTime += timeStep;
+        
+        // Limit to 24 hours
+        if (this.gameState.currentTime >= 24 * 60) {
+            this.gameState.currentTime = 0;
+        }
+
+        this.simulateGlucoseChange();
+        this.updateActiveEffects();
+        this.updateDisplay();
+        this.updateChart();
+        
+        this.logEvent(`시간이 ${this.formatTime(this.gameState.currentTime)}로 진행되었습니다.`);
+    }
+
+    simulateGlucoseChange() {
+        let glucoseChange = 0;
+        let activeInsulin = 0;
+
+        // Natural glucose rise (dawn phenomenon, etc.)
+        const hour = Math.floor(this.gameState.currentTime / 60);
+        if (hour >= 4 && hour <= 8) {
+            glucoseChange += 2; // Dawn phenomenon
+        }
+
+        // Natural glucose drift
+        glucoseChange += (Math.random() - 0.5) * 4; // Random variation
+
+        // Calculate effects from active effects
+        this.gameState.activeEffects.forEach(effect => {
+            if (effect.type === 'macronutrient') {
+                const macroEffect = this.calculateMacronutrientEffect(effect);
+                glucoseChange += macroEffect;
+            } else if (effect.type === 'insulin') {
+                const insulinEffect = this.calculateInsulinEffect(effect);
+                activeInsulin += insulinEffect;
+            } else if (effect.type === 'extended_bolus') {
+                const bolusEffect = this.calculateExtendedBolusEffect(effect);
+                activeInsulin += bolusEffect;
+            }
+        });
+
+        // Apply insulin effect (lowers glucose)
+        glucoseChange -= activeInsulin * 3; // 1 unit of insulin effect = 3 mg/dL reduction
+
+        // Apply glucose change
+        this.gameState.currentGlucose += glucoseChange;
+        this.gameState.currentGlucose = Math.max(40, Math.min(400, this.gameState.currentGlucose));
+        this.gameState.activeInsulin = activeInsulin;
+
+        // Add to history
+        this.timeLabels.push(this.formatTime(this.gameState.currentTime));
+        this.glucoseHistory.push(this.gameState.currentGlucose);
+
+        // Keep only last 20 data points
+        if (this.timeLabels.length > 20) {
+            this.timeLabels.shift();
+            this.glucoseHistory.shift();
         }
     }
-}
 
-function prevTutorial() {
-    const currentStep = document.querySelector('.tutorial-step.active');
-    const prevStep = currentStep.previousElementSibling;
-    
-    if (prevStep && prevStep.classList.contains('tutorial-step')) {
-        currentStep.classList.remove('active');
-        prevStep.classList.add('active');
+    calculateMacronutrientEffect(effect) {
+        const currentTime = this.gameState.currentTime;
         
-        document.querySelector('.tutorial-nav .btn--primary').textContent = '다음';
-        document.querySelector('.tutorial-nav .btn--primary').onclick = nextTutorial;
+        if (currentTime < effect.onsetTime || currentTime > effect.endTime) {
+            return 0;
+        }
+
+        const macro = this.macronutrientData[effect.macroType];
+        const timeSinceOnset = currentTime - effect.onsetTime;
+        const effectDuration = effect.endTime - effect.onsetTime;
+        const timeToPeak = effect.peakTime - effect.onsetTime;
+
+        let intensity;
+        if (timeSinceOnset <= timeToPeak) {
+            // Rising phase
+            intensity = timeSinceOnset / timeToPeak;
+        } else {
+            // Falling phase
+            intensity = 1 - (timeSinceOnset - timeToPeak) / (effectDuration - timeToPeak);
+        }
+
+        intensity = Math.max(0, Math.min(1, intensity));
+
+        const maxEffect = effect.amount * (effect.conversion / 100) * 0.8; // Scale for realism
+        return maxEffect * intensity;
+    }
+
+    calculateInsulinEffect(effect) {
+        const currentTime = this.gameState.currentTime;
+        
+        if (currentTime < effect.onsetTime || currentTime > effect.endTime) {
+            return 0;
+        }
+
+        const timeSinceOnset = currentTime - effect.onsetTime;
+        const effectDuration = effect.endTime - effect.onsetTime;
+        const curveIndex = Math.min(
+            Math.floor((timeSinceOnset / effectDuration) * (effect.effectiveness.length - 1)),
+            effect.effectiveness.length - 1
+        );
+        const effectiveness = effect.effectiveness[curveIndex] || 0;
+
+        return effect.units * (effectiveness / 100);
+    }
+
+    calculateExtendedBolusEffect(effect) {
+        const currentTime = this.gameState.currentTime;
+        
+        if (currentTime < effect.startTime || currentTime > effect.endTime) {
+            return 0;
+        }
+
+        return effect.unitsPerMinute * 30; // 30 minutes step
+    }
+
+    updateActiveEffects() {
+        this.gameState.activeEffects = this.gameState.activeEffects.filter(effect => {
+            return this.gameState.currentTime < effect.endTime;
+        });
+    }
+
+    updateDisplay() {
+        document.getElementById('current-time').textContent = this.formatTime(this.gameState.currentTime);
+        document.getElementById('current-glucose').textContent = Math.round(this.gameState.currentGlucose);
+        document.getElementById('active-insulin').textContent = this.gameState.activeInsulin.toFixed(1);
+
+        // Update glucose color based on range
+        const glucoseElement = document.getElementById('current-glucose');
+        glucoseElement.className = '';
+        
+        if (this.gameState.currentGlucose < 80) {
+            glucoseElement.classList.add('glucose-low');
+        } else if (this.gameState.currentGlucose > 180) {
+            glucoseElement.classList.add('glucose-high');
+        } else {
+            glucoseElement.classList.add('glucose-normal');
+        }
+
+        // Add pulse animation for significant changes
+        glucoseElement.classList.add('update-animation');
+        setTimeout(() => {
+            glucoseElement.classList.remove('update-animation');
+        }, 500);
+    }
+
+    updateChart() {
+        if (this.gameState.chart) {
+            this.gameState.chart.data.labels = [...this.timeLabels];
+            this.gameState.chart.data.datasets[0].data = [...this.glucoseHistory];
+            this.gameState.chart.update('none');
+        }
+    }
+
+    formatTime(minutes) {
+        const hours = Math.floor(minutes / 60) % 24;
+        const mins = minutes % 60;
+        return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
+    }
+
+    logEvent(message) {
+        const time = this.formatTime(this.gameState.currentTime);
+        const logEntry = `<p><span class="log-time">[${time}]</span> ${message}</p>`;
+        this.gameState.gameLog.push(logEntry);
+        
+        const logContent = document.getElementById('log-content');
+        logContent.innerHTML = this.gameState.gameLog.slice(-10).join('');
+        logContent.scrollTop = logContent.scrollHeight;
     }
 }
 
-function skipTutorial() {
-    showScreen('characterSetup');
+// 컴포넌트 HTML을 동적으로 불러와서 각 영역에 삽입
+async function loadComponent(id, path) {
+    const res = await fetch(path);
+    const html = await res.text();
+    document.getElementById(id).innerHTML = html;
 }
 
-function finishTutorial() {
-    showScreen('characterSetup');
+async function loadAllComponents() {
+    await Promise.all([
+        loadComponent('current-status', 'components/CurrentStatus.html'),
+        loadComponent('glucose-chart-area', 'components/GlucoseChart.html'),
+        loadComponent('action-panel', 'components/ActionPanel.html'),
+        loadComponent('meal-modal-area', 'components/MealModal.html'),
+        loadComponent('insulin-modal-area', 'components/InsulinModal.html'),
+        loadComponent('education-panel', 'components/EducationPanel.html'),
+        loadComponent('game-log', 'components/GameLog.html'),
+    ]);
 }
 
-// Game action functions
-function checkBloodGlucose() {
-    if (!game) return;
-    
-    game.gameState.dailyStats.bgChecks++;
-    game.gameState.managementScore += 2;
-    
-    const modal = document.getElementById('actionModal');
-    const content = document.getElementById('modalContent');
-    
-    content.innerHTML = `
-        <h3>혈당 측정 결과</h3>
-        <div class="bg-display">
-            <div class="bg-value">${Math.round(game.gameState.bloodGlucose)}</div>
-            <div class="bg-status ${game.getBGStatusClass()}">${game.getBGStatus()}</div>
-        </div>
-        <p>측정 시간: ${game.formatTime(game.gameState.gameTime)}</p>
-        <button class="btn btn--primary" onclick="closeModal()">확인</button>
-    `;
-    
-    modal.classList.add('active');
-}
+window.addEventListener('DOMContentLoaded', loadAllComponents);
 
-function injectInsulin(type) {
-    if (!game) return;
-    
-    const modal = document.getElementById('actionModal');
-    const content = document.getElementById('modalContent');
-    
-    const insulinInfo = game.gameData.insulinTypes[type === 'rapid' ? 'rapidActing' : 'longActing'];
-    
-    content.innerHTML = `
-        <h3>${insulinInfo.name} 주사</h3>
-        <div class="insulin-calculator">
-            <div class="calculator-row">
-                <span>현재 혈당:</span>
-                <span>${Math.round(game.gameState.bloodGlucose)} mg/dL</span>
-            </div>
-            <div class="calculator-row">
-                <span>주사 단위:</span>
-                <input type="number" id="insulinUnits" class="calculator-input" min="1" max="20" value="4">
-            </div>
-            <div class="calculator-row">
-                <span>예상 효과:</span>
-                <span id="expectedEffect">-40 mg/dL</span>
-            </div>
-        </div>
-        <div style="margin-top: 16px;">
-            <button class="btn btn--primary" onclick="confirmInsulinInjection('${type}')">주사하기</button>
-            <button class="btn btn--secondary" onclick="closeModal()">취소</button>
-        </div>
-    `;
-    
-    modal.classList.add('active');
-    
-    // Update expected effect when units change
-    document.getElementById('insulinUnits').addEventListener('input', function() {
-        const units = parseInt(this.value) || 0;
-        const effect = type === 'rapid' ? units * 50 : units * 30;
-        document.getElementById('expectedEffect').textContent = `-${effect} mg/dL`;
-    });
-}
-
-function confirmInsulinInjection(type) {
-    const units = parseInt(document.getElementById('insulinUnits').value) || 0;
-    
-    if (units <= 0) {
-        alert('올바른 단위를 입력해주세요.');
-        return;
-    }
-    
-    if (type === 'rapid') {
-        game.gameState.insulinOnBoard.rapid = units;
-        game.gameState.insulinOnBoard.rapidTime = new Date(game.gameState.gameTime);
-    } else {
-        game.gameState.insulinOnBoard.long = units;
-        game.gameState.insulinOnBoard.longTime = new Date(game.gameState.gameTime);
-    }
-    
-    game.gameState.managementScore += 3;
-    game.showMessage(`${type === 'rapid' ? '초속효성' : '지속형'} 인슐린 ${units}단위 주사 완료!`, 'success');
-    
-    closeModal();
-}
-
-function eatMeal() {
-    if (!game) return;
-    
-    const modal = document.getElementById('actionModal');
-    const content = document.getElementById('modalContent');
-    
-    content.innerHTML = `
-        <h3>식사 선택</h3>
-        <div class="food-grid">
-            ${game.gameData.koreanFoods.map(food => `
-                <div class="food-item" onclick="selectFood('${food.name}', ${food.carbs}, '${food.portion}')">
-                    <div class="food-name">${food.name}</div>
-                    <div class="food-carbs">탄수화물: ${food.carbs}g</div>
-                    <div class="food-portion">${food.portion}</div>
-                </div>
-            `).join('')}
-        </div>
-        <div id="selectedFoods" style="margin-top: 16px;"></div>
-        <div style="margin-top: 16px;">
-            <button class="btn btn--primary" onclick="confirmMeal()">식사 완료</button>
-            <button class="btn btn--secondary" onclick="closeModal()">취소</button>
-        </div>
-    `;
-    
-    modal.classList.add('active');
-}
-
-let selectedFoods = [];
-
-function selectFood(name, carbs, portion) {
-    selectedFoods.push({ name, carbs, portion });
-    updateSelectedFoods();
-}
-
-function updateSelectedFoods() {
-    const container = document.getElementById('selectedFoods');
-    const totalCarbs = selectedFoods.reduce((sum, food) => sum + food.carbs, 0);
-    
-    container.innerHTML = `
-        <h4>선택된 음식:</h4>
-        ${selectedFoods.map((food, index) => `
-            <div style="display: flex; justify-content: space-between; padding: 4px 0;">
-                <span>${food.name} (${food.portion})</span>
-                <span>${food.carbs}g</span>
-            </div>
-        `).join('')}
-        <hr>
-        <div style="display: flex; justify-content: space-between; font-weight: bold;">
-            <span>총 탄수화물:</span>
-            <span>${totalCarbs}g</span>
-        </div>
-    `;
-}
-
-function confirmMeal() {
-    if (selectedFoods.length === 0) {
-        alert('음식을 선택해주세요.');
-        return;
-    }
-    
-    const totalCarbs = selectedFoods.reduce((sum, food) => sum + food.carbs, 0);
-    
-    // Increase blood glucose based on carbs
-    game.gameState.bloodGlucose += totalCarbs * 3; // 3mg/dL per gram of carbs
-    game.gameState.dailyStats.carbs += totalCarbs;
-    game.gameState.dailyStats.meals++;
-    
-    game.gameState.managementScore += 1;
-    game.showMessage(`식사 완료! 탄수화물 ${totalCarbs}g 섭취`, 'success');
-    
-    selectedFoods = [];
-    closeModal();
-}
-
-function doActivity() {
-    if (!game) return;
-    
-    const modal = document.getElementById('actionModal');
-    const content = document.getElementById('modalContent');
-    
-    content.innerHTML = `
-        <h3>활동 선택</h3>
-        <div class="activity-grid">
-            ${game.gameData.activities.map(activity => `
-                <div class="activity-item-card" onclick="selectActivity('${activity.name}', ${activity.bgEffect}, ${activity.duration})">
-                    <div class="activity-name">${activity.name}</div>
-                    <div class="activity-intensity">강도: ${activity.intensity}</div>
-                    <div class="activity-effect">혈당 효과: ${activity.bgEffect}mg/dL</div>
-                </div>
-            `).join('')}
-        </div>
-        <div style="margin-top: 16px;">
-            <button class="btn btn--secondary" onclick="closeModal()">취소</button>
-        </div>
-    `;
-    
-    modal.classList.add('active');
-}
-
-function selectActivity(name, bgEffect, duration) {
-    // Check if blood glucose is too low for exercise
-    if (game.gameState.bloodGlucose < 100) {
-        alert('운동 전 혈당이 너무 낮습니다. 간식을 드시고 운동하세요.');
-        return;
-    }
-    
-    game.gameState.bloodGlucose += bgEffect;
-    game.gameState.energy = Math.max(0, game.gameState.energy - 15);
-    game.gameState.dailyStats.activities.push({ name, duration, time: new Date(game.gameState.gameTime) });
-    
-    game.gameState.managementScore += 2;
-    game.showMessage(`${name} ${duration}분 완료!`, 'success');
-    
-    closeModal();
-}
-
-function handleEmergencyAction(action) {
-    if (action.includes('포도당') || action.includes('주스') || action.includes('사탕')) {
-        game.gameState.bloodGlucose += 45; // Fast carbs effect
-        game.showMessage('빠른 탄수화물 섭취 완료!', 'success');
-    } else if (action.includes('인슐린')) {
-        game.gameState.insulinOnBoard.rapid = 3;
-        game.gameState.insulinOnBoard.rapidTime = new Date(game.gameState.gameTime);
-        game.showMessage('인슐린 주사 완료!', 'success');
-    } else if (action.includes('물')) {
-        game.gameState.energy += 5;
-        game.showMessage('충분한 수분 섭취!', 'success');
-    }
-    
-    closeModal();
-}
-
-function viewBGHistory() {
-    const modal = document.getElementById('actionModal');
-    const content = document.getElementById('modalContent');
-    
-    content.innerHTML = `
-        <h3>혈당 기록</h3>
-        <div class="bg-chart-container">
-            <div class="bg-chart">혈당 그래프 (최근 24시간)</div>
-        </div>
-        <div style="margin-top: 16px;">
-            <p>목표 범위 내 시간: ${game.gameState.timeInRange}%</p>
-            <p>평균 혈당: ${Math.round(game.gameState.bgHistory.reduce((sum, entry) => sum + entry.value, 0) / game.gameState.bgHistory.length)}mg/dL</p>
-        </div>
-        <button class="btn btn--primary" onclick="closeModal()">확인</button>
-    `;
-    
-    modal.classList.add('active');
-}
-
-function viewFoodDiary() {
-    const modal = document.getElementById('actionModal');
-    const content = document.getElementById('modalContent');
-    
-    content.innerHTML = `
-        <h3>식단 일기</h3>
-        <div>
-            <p>오늘 섭취한 탄수화물: ${game.gameState.dailyStats.carbs}g</p>
-            <p>식사 횟수: ${game.gameState.dailyStats.meals}회</p>
-            <p>권장 일일 탄수화물: 200-300g</p>
-        </div>
-        <button class="btn btn--primary" onclick="closeModal()">확인</button>
-    `;
-    
-    modal.classList.add('active');
-}
-
-function viewActivityLog() {
-    const modal = document.getElementById('actionModal');
-    const content = document.getElementById('modalContent');
-    
-    const activities = game.gameState.dailyStats.activities;
-    
-    content.innerHTML = `
-        <h3>활동 기록</h3>
-        <div>
-            ${activities.length > 0 ? activities.map(activity => `
-                <div style="padding: 8px 0; border-bottom: 1px solid var(--color-border);">
-                    <strong>${activity.name}</strong> - ${activity.duration}분
-                    <br><small>${activity.time.toLocaleTimeString('ko-KR')}</small>
-                </div>
-            `).join('') : '<p>오늘 활동이 없습니다.</p>'}
-        </div>
-        <button class="btn btn--primary" onclick="closeModal()">확인</button>
-    `;
-    
-    modal.classList.add('active');
-}
-
-function advanceTime() {
-    if (!game) return;
-    
-    const newTime = new Date(game.gameState.gameTime.getTime() + 3600000); // Add 1 hour
-    game.gameState.gameTime = newTime;
-    game.showMessage('시간이 1시간 진행되었습니다.', 'info');
-}
-
-function pauseGame() {
-    if (!game) return;
-    
-    game.gameState.isPaused = !game.gameState.isPaused;
-    const button = event.target;
-    button.textContent = game.gameState.isPaused ? '재개' : '일시정지';
-    
-    game.showMessage(game.gameState.isPaused ? '게임 일시정지' : '게임 재개', 'info');
-}
-
-function saveGame() {
-    if (!game) return;
-    game.saveGame();
-}
-
-function closeModal() {
-    document.getElementById('actionModal').classList.remove('active');
-}
-
-// Initialize the game when page loads
-window.addEventListener('load', function() {
-    // Show welcome screen initially
-    showScreen('welcomeScreen');
+// Initialize the game when the page loads
+document.addEventListener('DOMContentLoaded', () => {
+    new DiabetesSimulator();
 });
