@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import AgeSelection from './components/AgeSelection';
 import CharacterPanel from './components/CharacterPanel';
 import GlucosePanel from './components/GlucosePanel';
@@ -9,9 +9,11 @@ import GameLog from './components/GameLog';
 import MealModal from './components/MealModal';
 import InsulinModal from './components/InsulinModal';
 import { useDiabetesSimulator } from './hooks/useDiabetesSimulator';
+import TutorialContainer from './components/TutorialContainer';
 import './App.css';
 
 function App() {
+  const [tutorialDone, setTutorialDone] = useState(false);
   const {
     gameState,
     setGameState,
@@ -34,6 +36,10 @@ function App() {
 
   const facial = '😊';
   const message = '안녕하세요! 함께 혈당을 관리해봐요!';
+
+  if (!tutorialDone) {
+    return <TutorialContainer onTutorialComplete={() => setTutorialDone(true)} />;
+  }
 
   if (!gameState.selectedAge) {
     return <AgeSelection onSelect={age => setGameState(s => ({ ...s, selectedAge: age }))} />;
