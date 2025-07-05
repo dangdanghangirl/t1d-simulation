@@ -6,9 +6,10 @@ import { foodData } from '../hooks/useDiabetesSimulator';
 interface MealModalProps {
   state: GameState;
   setState: Dispatch<SetStateAction<GameState>>;
+  handleMealWithInsulin: (food: typeof foodData[0], insulinUnits: number) => void;
 }
 
-const MealModal = ({ state, setState }: MealModalProps) => {
+const MealModal = ({ state, setState, handleMealWithInsulin }: MealModalProps) => {
   const [selected, setSelected] = React.useState<number | null>(null);
   const [insulin, setInsulin] = React.useState<number | null>(null);
   if (!state.showMealModal) return null;
@@ -63,13 +64,8 @@ const MealModal = ({ state, setState }: MealModalProps) => {
                     style={{ width: '100%' }}
                     disabled={selected === null || insulin === null || isNaN(insulin)}
                     onClick={() => {
-                      if (selected !== null) {
-                        setState((s: any) => ({
-                          ...s,
-                          selectedFood: foodData[selected],
-                          selectedInsulin: insulin,
-                          showMealModal: false
-                        }));
+                      if (selected !== null && insulin !== null && !isNaN(insulin)) {
+                        handleMealWithInsulin(foodData[selected], insulin);
                       }
                     }}
                   >

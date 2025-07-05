@@ -153,6 +153,43 @@ export function useDiabetesSimulator() {
     setGameState(prev => ({ ...prev, showInsulinModal: false }));
   }
 
+  // 식사+인슐린 입력 처리 (혈당/인슐린 효과 반영)
+  function handleMealWithInsulin(food: Food, insulinUnits: number) {
+    setGameState(prev => {
+      // 인슐린 효과(rapid_acting) 추가
+      const insulinEffect: Effect = {
+        type: 'insulin',
+        insulinType: 'rapid_acting',
+        units: insulinUnits,
+        startTime: prev.currentTime,
+        onsetTime: insulinData.rapid_acting.onset,
+        peakTime: insulinData.rapid_acting.peak,
+        endTime: prev.currentTime + insulinData.rapid_acting.duration,
+        effectiveness: insulinData.rapid_acting.effectiveness_curve,
+      };
+      // 식사 효과(탄수화물만 단순 반영)
+      const mealEffect: Effect = {
+        type: 'macronutrient',
+        macroType: 'carbohydrate',
+        amount: food.carbs,
+        startTime: prev.currentTime,
+        onsetTime: macronutrientData.carbohydrate.onset_time,
+        peakTime: macronutrientData.carbohydrate.peak_time,
+        endTime: prev.currentTime + macronutrientData.carbohydrate.effect_duration,
+        conversion: macronutrientData.carbohydrate.glucose_conversion,
+      };
+      return {
+        ...prev,
+        activeEffects: [...prev.activeEffects, insulinEffect, mealEffect],
+        activeInsulin: prev.activeInsulin + insulinUnits,
+        selectedFood: food,
+        selectedInsulin: insulinUnits,
+        showMealModal: false,
+      };
+    });
+    logEvent(`${food.name} 식사 및 인슐린 ${insulinUnits}U 주사`);
+  }
+
   // ...기타 이벤트 함수 및 시뮬레이션 로직 추가 예정...
 
   return {
@@ -164,7 +201,8 @@ export function useDiabetesSimulator() {
     openInsulinModal,
     closeInsulinModal,
     logEvent,
-    foodData, // 추가
+    foodData,
+    handleMealWithInsulin, // 추가
     // ...이벤트 함수들 추가 예정
   };
 }

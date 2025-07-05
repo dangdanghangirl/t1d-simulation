@@ -35,7 +35,8 @@ function App() {
     openInsulinModal,
     closeInsulinModal,
     logEvent,
-    foodData
+    foodData,
+    handleMealWithInsulin
   } = useDiabetesSimulator();
 
   const getStatus = (bg: number) => {
@@ -142,7 +143,7 @@ function App() {
           <TimePanel state={gameState} advanceTime={advanceTime} />
         </div>
         <GameLog state={gameState} />
-        <MealModal state={gameState} setState={setGameState} />
+        <MealModal state={gameState} setState={setGameState} handleMealWithInsulin={handleMealWithInsulin} />
         <InsulinModal state={gameState} setState={setGameState} />
         <div style={{ textAlign: 'center', marginTop: 24 }}>
           <button className="btn btn--primary" onClick={() => setShowGlucoseTest(true)}>
