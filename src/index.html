@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>1형 당뇨 시뮬레이션 게임</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header class="py-16">
+            <h1 class="text-center">1형 당뇨 시뮬레이션 게임</h1>
+            <p class="text-center text-secondary">연령대별 캐릭터와 함께 혈당 관리를 배워보세요</p>
+        </header>
+
+        <!-- 연령대 선택 화면 -->
+        <div id="age-selection" class="screen active">
+            <div class="card">
+                <div class="card__body">
+                    <h2 class="text-center mb-24">연령대를 선택하세요</h2>
+                    <div class="age-grid">
+                        <div class="age-option" data-age="child">
+                            <div class="age-character child-character">👶</div>
+                            <h3>어린이</h3>
+                            <p>5-12세</p>
+                            <button class="btn btn--primary btn--full-width">선택</button>
+                        </div>
+                        <div class="age-option" data-age="teenager">
+                            <div class="age-character teenager-character">👦</div>
+                            <h3>청소년</h3>
+                            <p>13-17세</p>
+                            <button class="btn btn--primary btn--full-width">선택</button>
+                        </div>
+                        <div class="age-option" data-age="youngAdult">
+                            <div class="age-character young-adult-character">👨</div>
+                            <h3>청년</h3>
+                            <p>18-25세</p>
+                            <button class="btn btn--primary btn--full-width">선택</button>
+                        </div>
+                        <div class="age-option" data-age="adult">
+                            <div class="age-character adult-character">👨‍💼</div>
+                            <h3>성인</h3>
+                            <p>26세 이상</p>
+                            <button class="btn btn--primary btn--full-width">선택</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 게임 화면 -->
+        <div id="game-screen" class="screen">
+            <div class="game-layout">
+                <!-- 캐릭터 영역 -->
+                <div class="character-section">
+                    <div class="character-container">
+                        <div id="character" class="character">
+                            <div class="character-face">😊</div>
+                            <div class="character-body"></div>
+                        </div>
+                        <div class="character-speech">
+                            <div id="character-message" class="speech-bubble">
+                                안녕하세요! 함께 혈당을 관리해봐요!
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 혈당 정보 패널 -->
+                <div class="blood-glucose-panel">
+                    <div class="card">
+                        <div class="card__header">
+                            <h3>혈당 모니터링</h3>
+                        </div>
+                        <div class="card__body">
+                            <div class="glucose-display">
+                                <div class="glucose-value">
+                                    <span id="glucose-number">120</span>
+                                    <span class="glucose-unit">mg/dL</span>
+                                </div>
+                                <div id="glucose-status" class="status status--success">정상</div>
+                            </div>
+                            <div class="glucose-chart">
+                                <canvas id="glucose-chart-canvas" width="300" height="150"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 관리 패널 -->
+                <div class="management-panel">
+                    <div class="card">
+                        <div class="card__header">
+                            <h3>혈당 관리</h3>
+                        </div>
+                        <div class="card__body">
+                            <div class="management-tabs">
+                                <button class="tab-button active" data-tab="insulin">인슐린</button>
+                                <button class="tab-button" data-tab="food">식사</button>
+                                <button class="tab-button" data-tab="exercise">운동</button>
+                            </div>
+
+                            <!-- 인슐린 탭 -->
+                            <div id="insulin-tab" class="tab-content active">
+                                <div class="form-group">
+                                    <label class="form-label">인슐린 타입</label>
+                                    <select id="insulin-type" class="form-control">
+                                        <option value="rapidActing">초속효성 인슐린</option>
+                                        <option value="longActing">지속형 인슐린</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">용량 (단위)</label>
+                                    <input type="number" id="insulin-dose" class="form-control" min="1" max="20" value="5">
+                                </div>
+                                <button id="inject-insulin" class="btn btn--primary btn--full-width">인슐린 주사</button>
+                            </div>
+
+                            <!-- 식사 탭 -->
+                            <div id="food-tab" class="tab-content">
+                                <div class="form-group">
+                                    <label class="form-label">음식 선택</label>
+                                    <select id="food-select" class="form-control">
+                                        <option value="">음식을 선택하세요</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">분량</label>
+                                    <input type="number" id="food-portion" class="form-control" min="0.5" max="3" step="0.5" value="1">
+                                </div>
+                                <button id="eat-food" class="btn btn--primary btn--full-width">식사하기</button>
+                            </div>
+
+                            <!-- 운동 탭 -->
+                            <div id="exercise-tab" class="tab-content">
+                                <div class="form-group">
+                                    <label class="form-label">운동 타입</label>
+                                    <select id="exercise-type" class="form-control">
+                                        <option value="light">가벼운 운동 (산책)</option>
+                                        <option value="moderate">보통 운동 (조깅)</option>
+                                        <option value="intense">강한 운동 (달리기)</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">운동 시간 (분)</label>
+                                    <input type="number" id="exercise-duration" class="form-control" min="10" max="120" value="30">
+                                </div>
+                                <button id="do-exercise" class="btn btn--primary btn--full-width">운동하기</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 시간 및 상태 패널 -->
+                <div class="time-panel">
+                    <div class="card">
+                        <div class="card__body">
+                            <div class="time-display">
+                                <div class="game-time">
+                                    <span id="game-hour">08</span>:<span id="game-minute">00</span>
+                                </div>
+                                <div class="time-controls">
+                                    <button id="pause-btn" class="btn btn--secondary">일시정지</button>
+                                    <button id="speed-btn" class="btn btn--secondary">배속: 1x</button>
+                                </div>
+                            </div>
+                            <div class="emergency-alert" id="emergency-alert" style="display: none;">
+                                <div class="alert-content">
+                                    <span class="alert-icon">🚨</span>
+                                    <span id="alert-message">응급상황 발생!</span>
+                                </div>
+                                <button id="emergency-action" class="btn btn--error">응급처치</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 결과 화면 -->
+        <div id="result-screen" class="screen">
+            <div class="card">
+                <div class="card__header">
+                    <h2>일일 혈당 관리 결과</h2>
+                </div>
+                <div class="card__body">
+                    <div id="result-content"></div>
+                    <div class="result-actions">
+                        <button id="restart-btn" class="btn btn--primary">다시 시작</button>
+                        <button id="change-age-btn" class="btn btn--secondary">연령대 변경</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
