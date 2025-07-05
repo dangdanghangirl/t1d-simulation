@@ -11,12 +11,21 @@ import InsulinModal from './components/InsulinModal';
 import GlucoseTestCard from './components/GlucoseTestCard';
 import { useDiabetesSimulator } from './hooks/useDiabetesSimulator';
 import TutorialContainer from './components/TutorialContainer';
+import MealCard from './components/MealCard';
+import InsulinCard from './components/InsulinCard';
+import PracticeFeedbackCard from './components/PracticeFeedbackCard';
 import './App.css';
 
 function App() {
   const [tutorialDone, setTutorialDone] = useState(false);
   const [showGlucoseTest, setShowGlucoseTest] = useState(false);
   const [lastGlucose, setLastGlucose] = useState<number | null>(null);
+  // 실습 단계 상태: null | 'meal' | 'insulin' | 'feedback'
+  const [practiceStep, setPracticeStep] = useState<null | 'meal' | 'insulin' | 'feedback'>(null);
+  const [practiceMeal, setPracticeMeal] = useState<any>(null);
+  const [practiceInsulin, setPracticeInsulin] = useState<number | null>(null);
+  const [practiceFeedback, setPracticeFeedback] = useState<{ status: 'success' | 'error' | 'info'; message: string } | null>(null);
+
   const {
     gameState,
     setGameState,
@@ -25,7 +34,8 @@ function App() {
     closeMealModal,
     openInsulinModal,
     closeInsulinModal,
-    logEvent
+    logEvent,
+    foodData
   } = useDiabetesSimulator();
 
   const getStatus = (bg: number) => {
@@ -60,6 +70,62 @@ function App() {
     return <AgeSelection onSelect={age => setGameState(s => ({ ...s, selectedAge: age }))} />;
   }
 
+  // 실습 카드 흐름 렌더링
+  if (practiceStep === 'meal') {
+    return (
+      <MealCard
+        meals={foodData.map(f => ({ name: f.name, carbs: f.carbs }))}
+        onSelect={meal => {
+          setPracticeMeal(meal);
+          setPracticeStep('insulin');
+        }}
+        onClose={() => setPracticeStep(null)}
+      />
+    );
+  }
+  if (practiceStep === 'insulin') {
+    return (
+      <InsulinCard
+        maxDose={20}
+        onInject={dose => {
+          setPracticeInsulin(dose);
+          // 간단 피드백 예시: 탄수화물 대비 적정 인슐린(예: 1U/15g)
+          const expected = Math.round(practiceMeal.carbs / 15);
+          let status: 'success' | 'error' | 'info' = 'info';
+          let msg = '';
+          if (dose === expected) {
+            status = 'success';
+            msg = `적정량(${expected}U)를 정확히 주사했어요!`;
+          } else if (dose < expected) {
+            status = 'error';
+            msg = `인슐린이 부족해요. 권장량: ${expected}U`;
+          } else {
+            status = 'error';
+            msg = `인슐린이 너무 많아요. 권장량: ${expected}U`;
+          }
+          setPracticeFeedback({ status, message: msg });
+          setPracticeStep('feedback');
+        }}
+        onClose={() => setPracticeStep(null)}
+      />
+    );
+  }
+  if (practiceStep === 'feedback' && practiceFeedback) {
+    return (
+      <PracticeFeedbackCard
+        status={practiceFeedback.status}
+        message={practiceFeedback.message}
+        onNext={() => {
+          // 실습 종료 후 일반 시뮬레이션으로 복귀
+          setPracticeStep(null);
+          setPracticeMeal(null);
+          setPracticeInsulin(null);
+          setPracticeFeedback(null);
+        }}
+      />
+    );
+  }
+
   return (
     <div className="container">
       <header className="header">
@@ -81,6 +147,9 @@ function App() {
         <div style={{ textAlign: 'center', marginTop: 24 }}>
           <button className="btn btn--primary" onClick={() => setShowGlucoseTest(true)}>
             혈당 측정 시뮬레이션
+          </button>
+          <button className="btn btn--secondary ml-8" onClick={() => setPracticeStep('meal')}>
+            식사-인슐린 실습
           </button>
           {lastGlucose !== null && (
             <div style={{ marginTop: 12, color: 'var(--color-primary)' }}>
