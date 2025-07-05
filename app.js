@@ -626,9 +626,11 @@ async function loadAllComponents() {
     ]);
 }
 
-window.addEventListener('DOMContentLoaded', loadAllComponents);
-
-// Initialize the game when the page loads
-document.addEventListener('DOMContentLoaded', () => {
+window.addEventListener('DOMContentLoaded', async () => {
+    await loadAllComponents();
+    // 모달이 항상 hidden 상태로 시작하도록 보장
+    document.getElementById('meal-modal').classList.add('hidden');
+    document.getElementById('insulin-modal').classList.add('hidden');
+    // 시뮬레이터 초기화
     new DiabetesSimulator();
 });

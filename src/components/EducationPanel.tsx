@@ -1,0 +1,32 @@
+import React from 'react';
+
+const EducationPanel = () => {
+  return (
+    <div className="education-panel">
+      <div className="card">
+        <div className="card__header">
+          <h3>학습 포인트</h3>
+        </div>
+        <div className="card__body">
+          <div id="education-content">
+            <h4>지속형 인슐린의 특징</h4>
+            <ul>
+              <li>24시간 동안 일정한 효과를 유지합니다</li>
+              <li>2-4시간 후부터 작용을 시작합니다</li>
+              <li>피크 없이 평평한 효과를 나타냅니다</li>
+              <li>기저 인슐린 역할을 담당합니다</li>
+            </ul>
+            <h4>영양소별 혈당 영향</h4>
+            <ul>
+              <li><strong>탄수화물:</strong> 100% 포도당 전환, 즉시 혈당 상승</li>
+              <li><strong>단백질:</strong> 50% 포도당 전환, 3-5시간 후 혈당 상승</li>
+              <li><strong>지방:</strong> 10% 포도당 전환, 2-4시간 후 지연 효과</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default EducationPanel;
