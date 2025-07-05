@@ -762,6 +762,65 @@ select.form-control {
   color: var(--color-success);
 }
 
+/* 튜토리얼 챕터 카드, 캐릭터, 대화, 설명 등 스타일 개선 */
+.chapter-card {
+  background: var(--color-surface);
+  border-radius: 16px;
+  box-shadow: var(--shadow-md);
+  border: 1.5px solid var(--color-card-border);
+  max-width: 480px;
+  width: 100%;
+  margin: 0 auto 24px auto;
+  padding: 32px 24px 24px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  animation: fadeIn 0.5s;
+}
+
+.character-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-hover));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: var(--font-weight-bold);
+  font-size: 22px;
+  margin-right: 8px;
+}
+
+.dialogue-box {
+  background: var(--color-background);
+  border-left: 4px solid var(--color-primary);
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 8px;
+  font-size: var(--font-size-lg);
+  color: var(--color-text);
+  box-shadow: 0 1px 4px rgba(33,128,141,0.04);
+}
+
+.chapter-card ul, .chapter-card ol {
+  margin: 8px 0 0 0;
+  padding-left: 20px;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-md);
+}
+
+.chapter-card li {
+  margin-bottom: 6px;
+}
+
+.chapter-card .chapter-title {
+  color: var(--color-primary);
+  font-size: 20px;
+  font-weight: var(--font-weight-bold);
+  margin-bottom: 12px;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .character-intro {

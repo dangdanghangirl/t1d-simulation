@@ -8,12 +8,15 @@ import ResultScreen from './components/ResultScreen';
 import GameLog from './components/GameLog';
 import MealModal from './components/MealModal';
 import InsulinModal from './components/InsulinModal';
+import GlucoseTestCard from './components/GlucoseTestCard';
 import { useDiabetesSimulator } from './hooks/useDiabetesSimulator';
 import TutorialContainer from './components/TutorialContainer';
 import './App.css';
 
 function App() {
   const [tutorialDone, setTutorialDone] = useState(false);
+  const [showGlucoseTest, setShowGlucoseTest] = useState(false);
+  const [lastGlucose, setLastGlucose] = useState<number | null>(null);
   const {
     gameState,
     setGameState,
@@ -41,6 +44,18 @@ function App() {
     return <TutorialContainer onTutorialComplete={() => setTutorialDone(true)} />;
   }
 
+  if (showGlucoseTest) {
+    return (
+      <div className="tutorial-container" style={{ justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
+        <GlucoseTestCard onComplete={result => {
+          setLastGlucose(result);
+          setShowGlucoseTest(false);
+          setGameState(s => ({ ...s, currentGlucose: result }));
+        }} />
+      </div>
+    );
+  }
+
   if (!gameState.selectedAge) {
     return <AgeSelection onSelect={age => setGameState(s => ({ ...s, selectedAge: age }))} />;
   }
@@ -63,6 +78,16 @@ function App() {
         <GameLog state={gameState} />
         <MealModal state={gameState} setState={setGameState} />
         <InsulinModal state={gameState} setState={setGameState} />
+        <div style={{ textAlign: 'center', marginTop: 24 }}>
+          <button className="btn btn--primary" onClick={() => setShowGlucoseTest(true)}>
+            혈당 측정 시뮬레이션
+          </button>
+          {lastGlucose !== null && (
+            <div style={{ marginTop: 12, color: 'var(--color-primary)' }}>
+              최근 측정값: <b>{lastGlucose} mg/dL</b>
+            </div>
+          )}
+        </div>
         {/* 결과 화면은 조건부 렌더링 예시 */}
         {false && <ResultScreen /* 추후 props 연결 */ />}
       </main>
