@@ -14,12 +14,14 @@ import TutorialContainer from './components/TutorialContainer';
 import MealCard from './components/MealCard';
 import InsulinCard from './components/InsulinCard';
 import PracticeFeedbackCard from './components/PracticeFeedbackCard';
+import SimulatorSettings from './components/SimulatorSettings';
 import './App.css';
 
 function App() {
   const [tutorialDone, setTutorialDone] = useState(false);
   const [showGlucoseTest, setShowGlucoseTest] = useState(false);
   const [lastGlucose, setLastGlucose] = useState<number | null>(null);
+  const [settingsDone, setSettingsDone] = useState(false);
   // 실습 단계 상태: null | 'meal' | 'insulin' | 'feedback'
   const [practiceStep, setPracticeStep] = useState<null | 'meal' | 'insulin' | 'feedback'>(null);
   const [practiceMeal, setPracticeMeal] = useState<any>(null);
@@ -50,6 +52,10 @@ function App() {
 
   const facial = '😊';
   const message = '안녕하세요! 함께 혈당을 관리해봐요!';
+
+  if (!settingsDone) {
+    return <SimulatorSettings onComplete={() => setSettingsDone(true)} />;
+  }
 
   if (!tutorialDone) {
     return <TutorialContainer onTutorialComplete={() => setTutorialDone(true)} />;

@@ -97,6 +97,9 @@ export function useDiabetesSimulator() {
   // 초기 상태
   const [gameState, setGameState] = useState<GameState>({
     selectedAge: null,
+    characterName: '', // 캐릭터 이름
+    icr: 15, // 인슐린:탄수화물 비율 (1U/15g)
+    isf: 50, // 인슐린 민감도 (1U당 혈당 감소 mg/dL)
     currentTime: 8 * 60,
     currentGlucose: 120,
     activeInsulin: 0,
@@ -104,11 +107,27 @@ export function useDiabetesSimulator() {
     activeEffects: [],
     gameLog: [],
     selectedFood: null,
+    selectedInsulin: null,
     showMealModal: false,
     showInsulinModal: false,
     glucoseHistory: [120],
     timeLabels: ['08:00']
   });
+
+  // 설명 텍스트
+  const explainICR = '인슐린:탄수화물 비율(ICR)은 1단위 인슐린이 몇 g의 탄수화물을 처리할 수 있는지 나타냅니다. 예: 1U/15g';
+  const explainISF = '인슐린 민감도(ISF)는 1단위 인슐린이 혈당을 얼마나 낮추는지(mg/dL) 나타냅니다. 예: 1U당 50mg/dL 감소';
+
+  // 설정 함수
+  function setCharacterName(name: string) {
+    setGameState(prev => ({ ...prev, characterName: name }));
+  }
+  function setICR(value: number) {
+    setGameState(prev => ({ ...prev, icr: value }));
+  }
+  function setISF(value: number) {
+    setGameState(prev => ({ ...prev, isf: value }));
+  }
 
   // 시뮬레이션 주요 이벤트 함수 예시 (식사, 인슐린, 운동, 시간 진행)
   function logEvent(message: string) {
@@ -129,12 +148,33 @@ export function useDiabetesSimulator() {
       const timeStep = 30;
       let newTime = prev.currentTime + timeStep;
       if (newTime >= 24 * 60) newTime = 0;
-      // TODO: 혈당 변화, 효과 적용 등 추가
+      // 혈당 변화 계산
+      let glucose = prev.currentGlucose;
+      let effects = prev.activeEffects.filter(e => e.endTime > newTime);
+      // 식사 효과(탄수화물)
+      effects.forEach(e => {
+        if (e.type === 'macronutrient' && e.macroType === 'carbohydrate' && e.amount) {
+          // onset/peak 고려 간단화: 효과 시간 내면 일정량씩 증가
+          if (newTime >= e.startTime + (e.onsetTime || 0) && newTime <= e.endTime) {
+            glucose += (e.amount * (e.conversion || 100) / 100) / ((e.endTime - e.startTime) / timeStep);
+          }
+        }
+        // 인슐린 효과
+        if (e.type === 'insulin' && e.units && e.effectiveness) {
+          // onset/peak 고려 간단화: 효과 시간 내면 일정량씩 감소
+          if (newTime >= e.startTime + (e.onsetTime || 0) && newTime <= e.endTime) {
+            // ISF(민감도) 반영: 1U당 isf만큼 혈당 감소
+            glucose -= (e.units * prev.isf) / ((e.endTime - e.startTime) / timeStep);
+          }
+        }
+      });
       return {
         ...prev,
         currentTime: newTime,
+        currentGlucose: Math.round(glucose),
+        activeEffects: effects,
         timeLabels: [...prev.timeLabels, formatTime(newTime)].slice(-20),
-        glucoseHistory: [...prev.glucoseHistory, prev.currentGlucose].slice(-20)
+        glucoseHistory: [...prev.glucoseHistory, Math.round(glucose)].slice(-20)
       };
     });
     logEvent('시간이 경과했습니다.');
@@ -202,7 +242,12 @@ export function useDiabetesSimulator() {
     closeInsulinModal,
     logEvent,
     foodData,
-    handleMealWithInsulin, // 추가
+    handleMealWithInsulin,
+    setCharacterName,
+    setICR,
+    setISF,
+    explainICR,
+    explainISF,
     // ...이벤트 함수들 추가 예정
   };
 }
